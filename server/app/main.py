@@ -7,6 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import pool
 #from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
+from authlib.integrations.requests_client  import OAuth1Session
+from app.convertToGeojson import convert_to_geojson
+import requests
+import json
+
 
 app = FastAPI() 
 
@@ -106,60 +113,97 @@ async def read_points():
 })
 
    
-# Post Query - test on the OPENAPI Docs Page
-@app.post("/square")
-def square(some_number: int) -> dict:
-	square = some_number**2
-	return {f"{some_number} squared is: ": square}
+# # Post Query - test on the OPENAPI Docs Page
+# @app.post("/square")
+# def square(some_number: int) -> dict:
+# 	square = some_number**2
+# 	return {f"{some_number} squared is: ": square}
 
 
-# Simple Database query
-DB_HOST = "localhost"
-DB_PORT = 5432
-DB_NAME = "geoserver"
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
-DB_POOL_MIN_CONN = 1
-DB_POOL_MAX_CONN = 10
+# # Simple Database query
+# DB_HOST = "localhost"
+# DB_PORT = 5432
+# DB_NAME = "geoserver"
+# DB_USER = "postgres"
+# DB_PASSWORD = "postgres"
+# DB_POOL_MIN_CONN = 1
+# DB_POOL_MAX_CONN = 10
 
-db_pool = pool.SimpleConnectionPool(
-  DB_POOL_MIN_CONN, DB_POOL_MAX_CONN, host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PASSWORD
-)
+# db_pool = pool.SimpleConnectionPool(
+#   DB_POOL_MIN_CONN, DB_POOL_MAX_CONN, host=DB_HOST, port=DB_PORT, database=DB_NAME, user=DB_USER, password=DB_PASSWORD
+# )
 
-# Definition für das Antwortschema (response schema) für den Endpunkt getPoints
-class PunkteResponse(BaseModel):
-    id: int
-    name: str
-    x: float
-    y: float
-    geom: str
+# # Definition für das Antwortschema (response schema) für den Endpunkt getPoints
+# class PunkteResponse(BaseModel):
+#     id: int
+#     name: str
+#     x: float
+#     y: float
+#     geom: str
     
-# Funktion für den getPoints-Endpunkt
-# Test: curl http://localhost:8000/getPoints   
-@app.get("/getPoints" , response_model=list[PunkteResponse])
-async def get_punkte():
-    conn = None
-    try:
-        # Verbindung zur Datenbank über den Verbindungspool herstellen
-        conn = db_pool.getconn()
-        cur = conn.cursor()
-        query = "SELECT id, name, ST_X(geom) as x, ST_Y(geom) as y, ST_AsText(geom) as geom FROM punkte"
-        cur.execute(query)
-        results = cur.fetchall()
-        # Ergebnisse in Pydantic-Modelle umwandeln und zurückgeben
-        punkte = []
-        for row in results:
-        # Prüfen, ob die Ergebnisse ausreichend Spalten enthalten
-             if len(row) > 4:
-                  punkte.append(PunkteResponse(id=row[0], name=row[1], x=row[2], y=row[3], geom=row[4]))   
-        #print(punkte)
-        return punkte
-    except Exception as e:
-        print(e)
-        # Eine HTTPException mit Statuscode 500 (Interner Serverfehler) auslösen und den ausgelösten Fehler als Detail übergeben
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error: "+str(e))
-    finally:
-        if conn:
-            # Die Verbindung zur Datenbank beenden
-            db_pool.putconn(conn)
+# # Funktion für den getPoints-Endpunkt
+# # Test: curl http://localhost:8000/getPoints   
+# @app.get("/getPoints" , response_model=list[PunkteResponse])
+# async def get_punkte():
+#     conn = None
+#     try:
+#         # Verbindung zur Datenbank über den Verbindungspool herstellen
+#         conn = db_pool.getconn()
+#         cur = conn.cursor()
+#         query = "SELECT id, name, ST_X(geom) as x, ST_Y(geom) as y, ST_AsText(geom) as geom FROM punkte"
+#         cur.execute(query)
+#         results = cur.fetchall()
+#         # Ergebnisse in Pydantic-Modelle umwandeln und zurückgeben
+#         punkte = []
+#         for row in results:
+#         # Prüfen, ob die Ergebnisse ausreichend Spalten enthalten
+#              if len(row) > 4:
+#                   punkte.append(PunkteResponse(id=row[0], name=row[1], x=row[2], y=row[3], geom=row[4]))   
+#         #print(punkte)
+#         return punkte
+#     except Exception as e:
+#         print(e)
+#         # Eine HTTPException mit Statuscode 500 (Interner Serverfehler) auslösen und den ausgelösten Fehler als Detail übergeben
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error: "+str(e))
+#     finally:
+#         if conn:
+#             # Die Verbindung zur Datenbank beenden
+#             db_pool.putconn(conn)
 
+# Observations: curl http://localhost:8000/getPoints   
+@app.get("/getObservations/")
+async def get_observations():
+
+  #.env Variablen laden
+  load_dotenv()
+  USER_EMAIL = os.getenv("USER_EMAIL")
+  USER_PW = os.getenv("USER_PW")
+  OAUTH_CONSUMER_KEY = os.getenv("OAUTH_CONSUMER_KEY")
+  OAUTH_CONSUMER_SECRET = os.getenv("OAUTH_CONSUMER_SECRET")
+
+  #Request Parameter
+  date_from = "23-03-2025"
+  date_to= "24-03-2025"
+
+  #API Request
+  url = f"https://www.ornitho.ch/api/observations?user_email={USER_EMAIL}&user_pw={USER_PW}&date_from={date_from}&date_to={date_to}"
+
+  oauth_session  = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
+
+  response = oauth_session.get(url)
+
+  if response.status_code == 200:
+    #Convertieren und speichern von Geojson
+    geojson_output = convert_to_geojson(response.json())
+    with open("output/output.geojson", "w", encoding="utf-8") as f:
+      json.dump(geojson_output, f, ensure_ascii=False, indent=4)
+      
+    with open("output/output.json", "w", encoding="utf-8") as f:
+      json.dump(response.json(), f, ensure_ascii=False, indent=4)
+
+    return response.json() 
+  else:
+    raise HTTPException(     
+          status_code=response.status_code, 
+          detail=f"Error from Ornitho API: {response.text}"
+    )
