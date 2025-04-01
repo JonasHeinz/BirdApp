@@ -181,9 +181,9 @@ async def get_observations():
   OAUTH_CONSUMER_KEY = os.getenv("OAUTH_CONSUMER_KEY")
   OAUTH_CONSUMER_SECRET = os.getenv("OAUTH_CONSUMER_SECRET")
 
-  #Request Parameter
-  date_from = "23-03-2025"
-  date_to= "24-03-2025"
+  #Request Parameter mm.dd.yyyy
+  date_from = "01.01.2025"
+  date_to= "01.01.2025"
 
   #API Request
   url = f"https://www.ornitho.ch/api/observations?user_email={USER_EMAIL}&user_pw={USER_PW}&date_from={date_from}&date_to={date_to}"
@@ -191,6 +191,7 @@ async def get_observations():
   oauth_session  = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
   response = oauth_session.get(url)
+   
 
   if response.status_code == 200:
     #Convertieren und speichern von Geojson

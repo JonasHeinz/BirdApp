@@ -5,4 +5,4 @@ uvicorn
 orjson
 psycopg2
 pydantic
-oauthlib
+authlib
