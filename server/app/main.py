@@ -20,9 +20,11 @@ app = FastAPI()
 # CORS Einstellungen
 # siehe: https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware
 origins = [
+    "*",
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
+    "http://localhost:5173"
 ]
 
 app.add_middleware(
@@ -32,6 +34,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#.env Variablen laden
+load_dotenv()
+USER_EMAIL = os.getenv("USER_EMAIL")
+USER_PW = os.getenv("USER_PW")
+OAUTH_CONSUMER_KEY = os.getenv("OAUTH_CONSUMER_KEY")
+OAUTH_CONSUMER_SECRET = os.getenv("OAUTH_CONSUMER_SECRET")
+
+oauth_session  = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
 # Simple Hello World example
 @app.get("/") 
@@ -174,12 +185,6 @@ async def read_points():
 @app.get("/getObservations/")
 async def get_observations():
 
-  #.env Variablen laden
-  load_dotenv()
-  USER_EMAIL = os.getenv("USER_EMAIL")
-  USER_PW = os.getenv("USER_PW")
-  OAUTH_CONSUMER_KEY = os.getenv("OAUTH_CONSUMER_KEY")
-  OAUTH_CONSUMER_SECRET = os.getenv("OAUTH_CONSUMER_SECRET")
 
   #Request Parameter mm.dd.yyyy
   date_from = "01.01.2025"
@@ -187,8 +192,6 @@ async def get_observations():
 
   #API Request
   url = f"https://www.ornitho.ch/api/observations?user_email={USER_EMAIL}&user_pw={USER_PW}&date_from={date_from}&date_to={date_to}"
-
-  oauth_session  = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
   response = oauth_session.get(url)
    
@@ -203,6 +206,22 @@ async def get_observations():
       json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
     return response.json() 
+  else:
+    raise HTTPException(     
+          status_code=response.status_code, 
+          detail=f"Error from Ornitho API: {response.text}"
+    )
+
+
+@app.get("/getFamilies/")
+async def get_families():
+
+  #API Request
+  url = f"https://www.ornitho.ch/api/families?user_email={USER_EMAIL}&user_pw={USER_PW}"
+
+  response = oauth_session.get(url)
+  if response.status_code == 200:
+    return response.json().get("data", [])
   else:
     raise HTTPException(     
           status_code=response.status_code, 
