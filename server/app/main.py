@@ -205,6 +205,8 @@ async def get_observations():
     with open("output/output.json", "w", encoding="utf-8") as f:
       json.dump(response.json(), f, ensure_ascii=False, indent=4)
 
+    
+
     return response.json() 
   else:
     raise HTTPException(     
@@ -217,7 +219,7 @@ async def get_observations():
 async def get_families():
 
   #API Request
-  url = f"https://www.ornitho.ch/api/families?user_email={USER_EMAIL}&user_pw={USER_PW}"
+  url = f"https://www.ornitho.ch/api/families?user_email={USER_EMAIL}&user_pw={USER_PW}&id_taxo_group=1"
 
   response = oauth_session.get(url)
   if response.status_code == 200:
@@ -227,3 +229,31 @@ async def get_families():
           status_code=response.status_code, 
           detail=f"Error from Ornitho API: {response.text}"
     )
+
+  
+@app.get("/getSpecies/")
+async def get_species():
+  #API Request
+  url = f"https://www.ornitho.ch/api/species?user_email={USER_EMAIL}&user_pw={USER_PW}&id_taxo_group=1&is_used=true"
+
+  response = oauth_session.get(url)
+  if response.status_code == 200:
+    return response.json().get("data", [])
+  else:
+    raise HTTPException(     
+          status_code=response.status_code, 
+          detail=f"Error from Ornitho API: {response.text}"
+    )
+
+@app.get("/getObservationsSpecies/")
+async def get_species():
+    return[
+      { "name": "Waldkauz", "anzahl": 2, "species": "rare" },
+        { "name": "Wasseramsel", "anzahl": 1, "species": "very_rare" },
+        { "name": "Zaunkönig", "anzahl": 1, "species": "very_rare" },
+        { "name": "Graugans", "anzahl": 1, "species": "rare" },
+        { "name": "Kohlmeise", "anzahl": 2, "species": "common" },
+        { "name": "Blaumeise", "anzahl": 3, "species": "common" },
+        { "name": "Rotkehlchen", "anzahl": 3, "species": "common" },
+        { "name": "Amsel", "anzahl": 2, "species": "uncommon" }
+]
