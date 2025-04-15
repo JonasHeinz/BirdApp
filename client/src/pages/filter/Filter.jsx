@@ -6,10 +6,7 @@ import {
   FormControl,
   TextField,
   InputLabel,
-  ToggleButtonGroup,
-  ToggleButton,
   Chip,
-  OutlinedInput,
   Box,
 } from "@mui/material";
 import { useState, useEffect } from "react";
@@ -73,7 +70,7 @@ function Filter() {
   return (
     <Stack>
       <h1>BirdApp</h1>
-      <FormControl sx={{ m: 1, width: 300 }}>
+      <FormControl sx={{ m: 1, minWidth: 120 }}>
         <InputLabel id="rarity-label">Seltenheit</InputLabel>
         <Select
           labelId="rarity-label"
@@ -90,7 +87,6 @@ function Filter() {
                     key={value}
                     label={rarityData.find((r) => r.key === value).name}
                   />
-   
                 
               ))}
             </Box>
