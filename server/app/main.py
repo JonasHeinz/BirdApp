@@ -112,13 +112,27 @@ async def get_species():
 
 @app.get("/getObservationsSpecies/")
 async def get_species():
-    return [
-        {"name": "Waldkauz", "anzahl": 2, "species": "rare"},
-        {"name": "Wasseramsel", "anzahl": 1, "species": "very_rare"},
-        {"name": "Zaunkönig", "anzahl": 1, "species": "very_rare"},
-        {"name": "Graugans", "anzahl": 1, "species": "rare"},
-        {"name": "Kohlmeise", "anzahl": 2, "species": "common"},
-        {"name": "Blaumeise", "anzahl": 3, "species": "common"},
-        {"name": "Rotkehlchen", "anzahl": 3, "species": "common"},
-        {"name": "Amsel", "anzahl": 2, "species": "uncommon"}
-    ]
+   return execute_query("""
+    SELECT 
+        s.germanname AS name,
+        COUNT(o.*) AS anzahl,
+        s.rarity AS species
+    FROM 
+        observations o
+    JOIN 
+        species s ON o.speciesid = s.speciesid
+    GROUP BY 
+        s.speciesid
+    ORDER BY 
+        anzahl DESC
+    """)
+    # return [
+    #     {"name": "Waldkauz", "anzahl": 2, "species": "rare"},
+    #     {"name": "Wasseramsel", "anzahl": 1, "species": "very_rare"},
+    #     {"name": "Zaunkönig", "anzahl": 1, "species": "very_rare"},
+    #     {"name": "Graugans", "anzahl": 1, "species": "rare"},
+    #     {"name": "Kohlmeise", "anzahl": 2, "species": "common"},
+    #     {"name": "Blaumeise", "anzahl": 3, "species": "common"},
+    #     {"name": "Rotkehlchen", "anzahl": 3, "species": "common"},
+    #     {"name": "Amsel", "anzahl": 2, "species": "uncommon"}
+    # ]

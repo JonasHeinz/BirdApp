@@ -14,8 +14,6 @@ import DataTable from "./DataTable";
 import rarityData from "../../../public/rarityData";
 
 function Filter() {
-  const [family, setFamily] = useState();
-  const [familiesData, setFamiliesData] = useState([]);
   const [species, setSpecies] = useState();
   const [speciesData, setSpeciesData] = useState([]);
   const [observationsData, setObservationsData] = useState([]);
@@ -37,20 +35,6 @@ function Filter() {
       .catch((error) => setError(error.message));
   }, []);
 
-  //Families
-  useEffect(() => {
-    fetch("http://localhost:8000/getFamilies/")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setFamiliesData(data);
-      })
-      .catch((error) => setError(error.message));
-  }, []);
 
   //Species
   useEffect(() => {
@@ -73,6 +57,7 @@ function Filter() {
       <FormControl sx={{ m: 1, minWidth: 120 }}>
         <InputLabel id="rarity-label">Seltenheit</InputLabel>
         <Select
+          size="small" 
           labelId="rarity-label"
           id="rarity-select"
           multiple
@@ -103,26 +88,12 @@ function Filter() {
           )}
         </Select>
       </FormControl>
-
       <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
         <Autocomplete
-        size="small" 
-          id="families-autocomplete"
-          options={familiesData || []}
-          getOptionLabel={(option) => option.latin_name}
-          value={familiesData.find((f) => f.id === family) || null}
-          onChange={(event, newValue) => {
-            setFamily(newValue ? newValue.id : "");
-          }}
-          renderInput={(params) => <TextField {...params} label="Familie" variant="outlined" />}
-        />
-      </FormControl>
-      <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
-        <Autocomplete
-        size="small" 
+          size="small" 
           id="species-autocomplete"
           options={speciesData || []}
-          getOptionLabel={(option) => option.german_name}
+          getOptionLabel={(option) => option.germanname}
           value={speciesData.find((f) => f.id === species) || null}
           onChange={(event, newValue) => {
             setSpecies(newValue ? newValue.id : "");

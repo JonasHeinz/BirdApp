@@ -59,7 +59,7 @@ def get_species():
 
 def getObservations():
   #Request Parameter mm.dd.yyyy
-  date_from = "01.01.2025"
+  date_from = "01.01.2020"
   date_to= "01.01.2025"
 
   #API Request
@@ -81,7 +81,7 @@ def getObservations():
 def insert_observation(isozeit, speciesid, x, y, z):
     try:
         sql = """
-        INSERT INTO public.observations (isozeit, speciesid, x, y, z)
+        INSERT INTO public.observations (date, speciesid, x, y, z)
         VALUES (%s, %s, %s, %s, %s)
         """
         cur.execute(sql, (isozeit, speciesid, x, y, z))
