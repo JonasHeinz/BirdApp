@@ -13,6 +13,8 @@ from authlib.integrations.requests_client  import OAuth1Session
 from app.convertToGeojson import convert_to_geojson
 import requests
 import json
+from pictures import get_image_for_species
+from fastapi.responses import JSONResponse
 
 
 app = FastAPI() 
@@ -257,3 +259,9 @@ async def get_species():
         { "name": "Rotkehlchen", "anzahl": 3, "species": "common" },
         { "name": "Amsel", "anzahl": 2, "species": "uncommon" }
 ]
+
+
+@app.get("/getImage/")
+def get_image(species: str):
+    image_url = get_image_for_species(species)
+    return JSONResponse(content={"image_url": image_url})
