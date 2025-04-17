@@ -6,6 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import pool
 import os
 from dotenv import load_dotenv
+from authlib.integrations.requests_client  import OAuth1Session
+from app.convertToGeojson import convert_to_geojson
+import requests
+import json
+from pictures import get_image_for_species
+from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
 
 
@@ -136,3 +142,9 @@ async def get_species():
     #     {"name": "Rotkehlchen", "anzahl": 3, "species": "common"},
     #     {"name": "Amsel", "anzahl": 2, "species": "uncommon"}
     # ]
+
+
+@app.get("/getImage/")
+def get_image(species: str):
+    image_url = get_image_for_species(species)
+    return JSONResponse(content={"image_url": image_url})
