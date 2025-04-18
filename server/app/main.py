@@ -121,8 +121,8 @@ async def get_species():
    return execute_query("""
     SELECT 
         s.germanname AS name,
-        COUNT(o.*) AS anzahl,
-        s.rarity AS species
+        COUNT(o.*) AS count,
+        s.rarity AS rarity
     FROM 
         observations o
     JOIN 
@@ -130,7 +130,7 @@ async def get_species():
     GROUP BY 
         s.speciesid
     ORDER BY 
-        anzahl DESC
+        count DESC
     """)
     # return [
     #     {"name": "Waldkauz", "anzahl": 2, "species": "rare"},

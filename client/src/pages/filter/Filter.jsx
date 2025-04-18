@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import DataTable from "./DataTable";
-import rarityData from "../../../public/rarityData";
+import {getRarity, rarityData} from "../../../public/rarityData";
 
 function Filter() {
   const [species, setSpecies] = useState();
@@ -68,9 +68,9 @@ function Filter() {
               {selected.map((value) => (
         
                   <Chip
-                    sx={{ backgroundColor: rarityData.find((r) => r.key === value).color }}
+                    sx={{ backgroundColor: getRarity(value).color }}
                     key={value}
-                    label={rarityData.find((r) => r.key === value).name}
+                    label={getRarity(value).name}
                   />
                 
               ))}
