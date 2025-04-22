@@ -11,6 +11,7 @@ from app.convertToGeojson import convert_to_geojson
 import requests
 import json
 from pictures import get_image_for_species
+from pictures import get_wikipedia_summary
 from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
 
@@ -148,3 +149,10 @@ async def get_species():
 def get_image(species: str):
     image_url = get_image_for_species(species)
     return JSONResponse(content={"image_url": image_url})
+
+
+
+@app.get("/getText/")
+def get_text(species: str):
+    text_data = get_wikipedia_summary(species)
+    return JSONResponse(content=text_data)

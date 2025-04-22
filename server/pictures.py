@@ -1,8 +1,7 @@
 import requests
 
-def get_wikipedia_page_title(search_term):
-    """Sucht nach dem passendsten Wikipedia-Titel für den Suchbegriff."""
-    url = "https://en.wikipedia.org/w/api.php"
+def get_wikipedia_page_title(search_term, lang="de"):
+    url = f"https://{lang}.wikipedia.org/w/api.php"
     params = {
         "action": "query",
         "format": "json",
@@ -14,15 +13,31 @@ def get_wikipedia_page_title(search_term):
     data = response.json()
     search_results = data.get("query", {}).get("search", [])
     if search_results:
-        # Nimm den Titel des erstbesten Suchergebnisses
         return search_results[0]["title"]
     return None
 
+
+def get_wikipedia_summary(species):
+    lang = "de"
+    title = get_wikipedia_page_title(species, lang)
+    if not title:
+        return {"summary": None, "url": None, "de_name": None}
+
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{title.replace(' ', '_')}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        return {
+            "summary": data.get("extract"),
+            "url": data.get("content_urls", {}).get("desktop", {}).get("page"),
+            "de_name": data.get("title") 
+        }
+
+    return {"summary": None, "url": None, "de_name": None}
+
+
 def get_wikipedia_image(title):
-    """
-    Ruft über den Wikipedia-Titel das Bild ab.
-    """
-    url = "https://en.wikipedia.org/w/api.php"
+    url = f"https://en.wikipedia.org/w/api.php"
     params = {
         "action": "query",
         "format": "json",
@@ -40,29 +55,11 @@ def get_wikipedia_image(title):
     return None
 
 def get_image_for_species(sci_name):
-    # Versuche direkt das Bild zu holen
     image_url = get_wikipedia_image(sci_name)
     if image_url:
         return image_url
-    # Fallback: Suche nach passendem Artikeltitel
-    title = get_wikipedia_page_title(sci_name)
+
+    title = get_wikipedia_page_title(sci_name, lang="en")
     if title:
         return get_wikipedia_image(title)
     return None
-
-# Beispielanwendung
-species_list = [
-    "Anas platyrhynchos",        # Stockente
-    "Cyanistes caeruleus",       # Blaumeise
-    "Turdus merula",             # Amsel
-    "Parus major",               # Kohlmeise
-    "Buteo buteo",               # Mäusebussard
-    "Unknown species"            # Beispiel für keinen Treffer
-]
-
-for sci_name in species_list:
-    image_url = get_image_for_species(sci_name)
-    if image_url:
-        print(f"{sci_name} → {image_url}")
-    else:
-        print(f"{sci_name} → Kein Bild gefunden")
