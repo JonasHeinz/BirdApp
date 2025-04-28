@@ -7,6 +7,12 @@
 }
 #container_right{
   width: 40vw;
-  background-color: #547767;
+  background-color: #4b6043;
+  min-height: 100vh;
+  padding: 12px 
+}
+
+body{
+  margin: 0
 }
 

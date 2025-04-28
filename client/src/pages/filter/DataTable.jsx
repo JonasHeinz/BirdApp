@@ -82,10 +82,14 @@ export default function DataTable({ observations }) {
 
   return (
     <Paper>
-      <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
-        <Table size="small" aria-label="a dense table">
+      <TableContainer component={Paper} sx={{
+    borderRadius: "12px",
+    backgroundColor: "#f5f7f3",
+    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+  }}>
+        <Table size="small" aria-label="a dense table" >
           <TableHead>
-            <TableRow>
+            <TableRow >
               {headCells.map((headCell) => (
                 <TableCell
                   key={headCell.id}
@@ -119,22 +123,26 @@ export default function DataTable({ observations }) {
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
+          <TableBody >
             {sortedObservations &&
               sortedObservations
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row) => {
                   const isItemSelected = selected.includes(row.name);
                   return (
-                    <TableRow key={row.name}>
+                    <TableRow key={row.name}  sx={{
+
+  }}>
                       <TableCell>{row.count}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>
                         <Chip
+                        size="small"
                           sx={{ backgroundColor: getRarity(row.rarity).color }}
                           label={getRarity(row.rarity).name}
                         />
                       </TableCell>
+                      {/* button von alex */}
                       <TableCell padding="checkbox">
                         <Checkbox
                           color="primary"

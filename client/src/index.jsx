@@ -1,27 +1,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import { HashRouter, Navigate, Route, Routes } from "react-router";
-import Filter from "./pages/filter/Filter";
-import Image from "./pages/infos/Picture";
+import Navigation from "./Navigation";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+
     <div id="container_right">
-    <HashRouter>
-      <Routes>
-      <Route path="/" element={<Navigate to="/filter" replace />} />
-      <Route path="/filter" element={<Filter />} />
-      <Route path="/image" element={<Image />} />
-      {/* <Route path="/amsel" element={<AmselImage />} /> */}
-{/*      <Route path="/" element={<Navigate to="/openlayers" replace />} />
-        <Route path="openlayers" element={<OpenlayersPage />} />
-        <Route path="maplibre" element={<MaplibrePage />} />
-        <Route path="spatialanalysis" element={<SpatialAnalysisPage />} />
-        <Route path="geotiff" element={<GeoTIFFPage />} /> */}
-      </Routes>
-    </HashRouter>
+      <Navigation></Navigation>
     </div>
+
   </StrictMode>
 );
 
