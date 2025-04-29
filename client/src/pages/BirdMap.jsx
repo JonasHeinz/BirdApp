@@ -1,81 +1,71 @@
-'use client'; // falls du Next.js 13+ benutzt
-
 import React, { useEffect, useRef } from 'react';
 import 'ol/ol.css';
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { Tile as TileLayer, Vector as VectorLayer } from 'ol/layer';
 import { OSM } from 'ol/source';
-import { Vector as VectorSource } from 'ol/source';
-import { Feature } from 'ol';
-import { Polygon } from 'ol/geom';
-import { Stroke, Style } from 'ol/style';
+import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
+import { Fill, Stroke, Style } from 'ol/style';
+import { fromLonLat } from 'ol/proj';
 
 const BirdMap = () => {
-  const mapRef = useRef();
+  const mapRef = useRef(null);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    fetch("http://localhost:8000/getGeojson/?speciesid=1") // Pfad ggf. anpassen
+      .then(res => res.json())
+      .then(data => {
+        const features = new GeoJSON().readFeatures(data.grid1km, {
+          featureProjection: 'EPSG:3857',
+        });
 
-    // BBOX der Schweiz (grob) in EPSG:3857
-    const switzerlandExtent = [465000, 5000000, 900000, 5500000];
-    const gridSize = 10000; // 500 Meter Raster
+        const vectorSource = new VectorSource({
+          features: features,
+        });
 
-    const gridSource = new VectorSource();
+        const getColor = (count) => {
+          if (count === 0) return 'rgba(255,255,255,0.4)';
+          if (count < 5) return '#ffffb2';
+          if (count < 10) return '#fecc5c';
+          if (count < 20) return '#fd8d3c';
+          if (count < 50) return '#f03b20';
+          return '#bd0026';
+        };
 
-    for (let x = switzerlandExtent[0]; x < switzerlandExtent[2]; x += gridSize) {
-      for (let y = switzerlandExtent[1]; y < switzerlandExtent[3]; y += gridSize) {
-        const coords = [
-          [
-            [x, y],
-            [x + gridSize, y],
-            [x + gridSize, y + gridSize],
-            [x, y + gridSize],
-            [x, y]
-          ]
-        ];
-        const polygon = new Polygon(coords);
-        const feature = new Feature(polygon);
-        gridSource.addFeature(feature);
-      }
-    }
+        const vectorLayer = new VectorLayer({
+          source: vectorSource,
+          style: (feature) => {
+            const count = feature.get('count') || 0;
+            return new Style({
+              fill: new Fill({
+                color: getColor(count),
+              }),
+              stroke: new Stroke({
+                color: '#333',
+                width: 0.5,
+              }),
+            });
+          },
+        });
 
-    const gridLayer = new VectorLayer({
-      source: gridSource,
-      style: new Style({
-        stroke: new Stroke({
-          color: 'rgba(0, 0, 0, 0.2)',
-          width: 1,
-        }),
-      }),
-    });
+        const map = new Map({
+          target: mapRef.current,
+          layers: [
+            new TileLayer({ source: new OSM() }),
+            vectorLayer,
+          ],
+          view: new View({
+            center: fromLonLat([8.3, 46.8]), // Schweiz
+            zoom: 7,
+          }),
+        });
 
-    const map = new Map({
-      target: mapRef.current,
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-        gridLayer,
-      ],
-      view: new View({
-        center: [740000, 5200000], // ungefähr Schweiz-Mitte
-        zoom: 8,
-      }),
-    });
-
-    return () => map.setTarget(null); // Cleanup on unmount
+        return () => map.setTarget(null);
+      });
   }, []);
 
-  return (
-    <div
-      ref={mapRef}
-      style={{
-        width: '100%',
-        height: '100vh',
-      }}
-    />
-  );
+  return <div ref={mapRef} style={{ width: '100%', height: '600px' }} />;
 };
 
 export default BirdMap;

@@ -163,10 +163,10 @@ def get_text(species: str):
 def getGeojson():
 
     # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
-    grid1 = gpd.read_file("./data/1_km_Grid.geojson")
+    grid1 = gpd.read_file("server\data\1_km_Grid.geojson")
 
     # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
-    grid5 = gpd.read_file("./data/5_km_Grid.geojson")
+    grid5 = gpd.read_file("server\data\5_km_Grid.geojson")
 
     result = execute_query("""
     SELECT * FROM observations WHERE speciesid = %s
