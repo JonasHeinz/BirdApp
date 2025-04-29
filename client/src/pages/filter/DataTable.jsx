@@ -6,9 +6,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { TablePagination, TableSortLabel, Box, Chip, Checkbox} from "@mui/material";
+import { TablePagination, TableSortLabel, Box, Chip, Checkbox } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 import { getRarity } from "../../../public/rarityData";
+// new stuff from alex
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import IconButton from "@mui/material/IconButton";
 
 export default function DataTable({ observations }) {
   const [page, setPage] = useState(0);
@@ -82,14 +85,17 @@ export default function DataTable({ observations }) {
 
   return (
     <Paper>
-      <TableContainer component={Paper} sx={{
-    borderRadius: "12px",
-    backgroundColor: "#f5f7f3",
-    boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
-  }}>
-        <Table size="small" aria-label="a dense table" >
+      <TableContainer
+        component={Paper}
+        sx={{
+          borderRadius: "12px",
+          backgroundColor: "#f5f7f3",
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+        }}
+      >
+        <Table size="small" aria-label="a dense table">
           <TableHead>
-            <TableRow >
+            <TableRow>
               {headCells.map((headCell) => (
                 <TableCell
                   key={headCell.id}
@@ -110,11 +116,15 @@ export default function DataTable({ observations }) {
                 </TableCell>
               ))}
               <TableCell>Seltenheit</TableCell>
+              {/* new stuff from alex */}
+              <TableCell padding="checkbox">Info</TableCell>
               <TableCell padding="checkbox">
                 <Checkbox
                   color="primary"
                   indeterminate={selected.length > 0 && selected.length < sortedObservations.length}
-                  checked={ sortedObservations.length > 0 && selected.length ===  sortedObservations.length}
+                  checked={
+                    sortedObservations.length > 0 && selected.length === sortedObservations.length
+                  }
                   onChange={handleSelectAllClick}
                   inputProps={{
                     "aria-label": "select all desserts",
@@ -123,26 +133,37 @@ export default function DataTable({ observations }) {
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody >
+          <TableBody>
             {sortedObservations &&
               sortedObservations
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row) => {
                   const isItemSelected = selected.includes(row.name);
                   return (
-                    <TableRow key={row.name}  sx={{
-
-  }}>
+                    <TableRow key={row.name} sx={{}}>
                       <TableCell>{row.count}</TableCell>
                       <TableCell>{row.name}</TableCell>
                       <TableCell>
                         <Chip
-                        size="small"
+                          size="small"
                           sx={{ backgroundColor: getRarity(row.rarity).color }}
                           label={getRarity(row.rarity).name}
                         />
                       </TableCell>
-                      {/* button von alex */}
+                      {/* new stuff from alex */}
+                      <TableCell>
+                        <IconButton
+                          aria-label="Mehr Infos"
+                          onClick={() =>
+                            window.open(
+                              `https://www.google.com/search?q=${row.name}+Vogel`,
+                              "_blank"
+                            )
+                          }
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </TableCell>
                       <TableCell padding="checkbox">
                         <Checkbox
                           color="primary"
