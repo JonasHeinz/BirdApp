@@ -124,7 +124,8 @@ async def get_species():
     SELECT 
         s.germanname AS name,
         COUNT(o.*) AS count,
-        s.rarity AS rarity
+        s.rarity AS rarity,
+        s.latinname AS latinname
     FROM 
         observations o
     JOIN 

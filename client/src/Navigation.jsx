@@ -101,6 +101,7 @@ function Navigation() {
             <Route path="/" element={<Navigate to="/filter" replace />} />
             <Route path="/filter" element={<Filter />} />
             <Route path="/image" element={<Image />} />
+            <Route path="/image/:latinName" element={<Image />} />
           </Routes>
         </Box>
       </Box>
