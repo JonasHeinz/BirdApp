@@ -58,7 +58,7 @@ function Image() {
       </Button>
 
       {(deName || latinName) && (
-      <Typography variant="h6" sx={{ color: "white" }}>
+      <Typography variant="h6" sx={{ color: "black" }}>
         {deName} {`(${latinName})`}
       </Typography>
     )}
@@ -83,7 +83,7 @@ function Image() {
                   <Typography variant="body3" sx={{ wordBreak: "break-word", whiteSpace: "normal" }}>
                     <Link
                       href={imageUrl}
-                      sx={{ color: "white", fontSize: "12px" }}
+                      sx={{ color: "black", fontSize: "12px" }}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -95,13 +95,13 @@ function Image() {
             )}
             {summary && (
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "justify", maxWidth: "500px" }}>
-                <Typography variant="body3" sx={{ mb: 1 }}>
+                <Typography variant="body3" sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word", }}>
                   {summary}
                 </Typography>
                 {wikiUrl && (
                   <Link
                     href={wikiUrl}
-                    sx={{ color: "white", fontSize: "12px" }}
+                    sx={{ color: "black", fontSize: "12px" }}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
