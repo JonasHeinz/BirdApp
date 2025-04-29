@@ -15,6 +15,8 @@ from pictures import get_wikipedia_summary
 from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
 import geopandas as gpd
+from shapely import wkb
+import time
 
 
 app = FastAPI()
@@ -162,36 +164,41 @@ def get_text(species: str):
 @app.get("/getGeojson/")
 def getGeojson():
 
-    # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
-    grid1 = gpd.read_file("server\data\1_km_Grid.geojson")
-
-    # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
-    grid5 = gpd.read_file("server\data\5_km_Grid.geojson")
-
-    result = execute_query("""
-    SELECT * FROM observations WHERE speciesid = %s
-    """)
+    timestart_time = time.time()
+    # grid1 = gpd.read_file("data/km_Grid_1.gpkg")
+    grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
 
 
-    
-    sightings = gpd.GeoDataFrame(result, columns=["speciesid", "geom"], 
-                                  geometry="geom", crs="EPSG:4326")
+    end_time = time.time()
+    print(f"Die Ladezeit der GeoJSON-Dateien beträgt: {end_time - timestart_time} Sekunden.")
+    timestart_time = time.time()
+    # Berechnete Zeit ausgeben
+ 
 
-    
-    # 3. Sicherstellen, dass beide denselben CRS haben
-    sightings= sightings.to_crs(grid1.crs)
+    sql ="""
+    SELECT * FROM observations WHERE speciesid = 370
+    """    
+    conn = db_pool.getconn()
+    try:
+        sightings = gpd.GeoDataFrame.from_postgis(sql, conn)
 
-    join1 = gpd.sjoin(grid1, sightings, how="left", predicate="contains")
-    grid1["count"] = join1.groupby("index_left").size()
-    grid1["count"] = grid1["count"].fillna(0).astype(int)
+    finally:
+        db_pool.putconn(conn)
+
+    # join1 = gpd.sjoin(grid1, sightings, how="left", predicate="contains")
+    # grid1["count"] = join1.groupby("index_right").size()
+    # grid1["count"] = grid1["count"].fillna(0).astype(int)
 
     # 6. Spatial Join & Zählung für 5 km Grid
     join5 = gpd.sjoin(grid5, sightings, how="left", predicate="contains")
-    grid5["count"] = join5.groupby("index_left").size()
+    grid5["count"] = join5.groupby("id").size()
+    print(join5.head())
     grid5["count"] = grid5["count"].fillna(0).astype(int)
-
+    end_time = time.time()
+    print(f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
     # 7. GeoJSON-Ausgabe zurückgeben
+    filtered_grid5 = grid5[grid5["count"] > 0]
     return JSONResponse(content={
-        "grid1km": grid1.to_json(),
-        "grid5km": grid5.to_json()
+        # "grid1km": grid1.to_json(),
+        "grid5km": filtered_grid5.to_json()
     })
