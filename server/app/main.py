@@ -13,6 +13,7 @@ import json
 from pictures import get_image_for_species
 from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
+import geopandas as gpd
 
 
 app = FastAPI()
@@ -111,7 +112,7 @@ async def get_observations():
 async def get_species():
     return execute_query("""
     SELECT * FROM species
-    """)
+    """, 141)
 
 
 
@@ -148,3 +149,41 @@ async def get_species():
 def get_image(species: str):
     image_url = get_image_for_species(species)
     return JSONResponse(content={"image_url": image_url})
+
+
+@app.get("/getGeojson/")
+def getGeojson():
+
+    # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
+    grid1 = gpd.read_file("./data/1_km_Grid.geojson")
+
+    # 1. Grid laden (z. B. als Shapefile oder GeoJSON)
+    grid5 = gpd.read_file("./data/5_km_Grid.geojson")
+
+    result = execute_query("""
+    SELECT * FROM observations WHERE speciesid = %s
+    """)
+
+
+    
+    sightings = gpd.GeoDataFrame(result, columns=["speciesid", "geom"], 
+                                  geometry="geom", crs="EPSG:4326")
+
+    
+    # 3. Sicherstellen, dass beide denselben CRS haben
+    sightings= sightings.to_crs(grid1.crs)
+
+    join1 = gpd.sjoin(grid1, sightings, how="left", predicate="contains")
+    grid1["count"] = join1.groupby("index_left").size()
+    grid1["count"] = grid1["count"].fillna(0).astype(int)
+
+    # 6. Spatial Join & Zählung für 5 km Grid
+    join5 = gpd.sjoin(grid5, sightings, how="left", predicate="contains")
+    grid5["count"] = join5.groupby("index_left").size()
+    grid5["count"] = grid5["count"].fillna(0).astype(int)
+
+    # 7. GeoJSON-Ausgabe zurückgeben
+    return JSONResponse(content={
+        "grid1km": grid1.to_json(),
+        "grid5km": grid5.to_json()
+    })
