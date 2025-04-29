@@ -12,6 +12,7 @@ import { getRarity } from "../../../public/rarityData";
 // new stuff from alex
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import IconButton from "@mui/material/IconButton";
+import { useNavigate } from "react-router";
 
 export default function DataTable({ observations }) {
   const [page, setPage] = useState(0);
@@ -19,6 +20,8 @@ export default function DataTable({ observations }) {
   const [order, setOrder] = useState("asc");
   const [orderBy, setOrderBy] = useState("count");
   const [selected, setSelected] = useState([]);
+
+  const navigate = useNavigate();
 
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
@@ -154,12 +157,7 @@ export default function DataTable({ observations }) {
                       <TableCell>
                         <IconButton
                           aria-label="Mehr Infos"
-                          onClick={() =>
-                            window.open(
-                              `https://www.google.com/search?q=${row.name}+Vogel`,
-                              "_blank"
-                            )
-                          }
+                          onClick={() => navigate(`/image/${encodeURIComponent(row.latinname)}`)}
                         >
                           <VisibilityIcon />
                         </IconButton>

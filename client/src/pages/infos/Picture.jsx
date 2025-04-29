@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, Link, Typography } from "@mui/material";
+import { useParams } from "react-router";
 
 function Image() {
-  const [latinName, setLatinName] = useState("");
+  const { latinName: routeLatinName } = useParams();
+  const [latinName, setLatinName] = useState(routeLatinName || "");
   const [imageUrl, setImageUrl] = useState(null);
   const [summary, setSummary] = useState(null);
   const [wikiUrl, setWikiUrl] = useState(null);
@@ -40,12 +42,13 @@ function Image() {
   };
 
   useEffect(() => {
+    setLatinName(routeLatinName || "");
     fetchImageAndText();
-  }, []);
+  }, [routeLatinName]);
 
   return (
     <Box sx={{ p: 4, textAlign: "center" }}>
-      <TextField
+      {/* <TextField
         label="Lateinischer Name"
         value={latinName}
         onChange={(e) => setLatinName(e.target.value)}
@@ -55,15 +58,17 @@ function Image() {
       />
       <Button variant="contained" onClick={fetchImageAndText}>
         Laden
-      </Button>
+      </Button> */}
 
       {(deName || latinName) && (
-      <Typography variant="h6" sx={{ color: "black" }}>
-        {deName} {`(${latinName})`}
-      </Typography>
-    )}
+        <Typography variant="h6" sx={{ color: "black" }}>
+          {deName} {`(${latinName})`}
+        </Typography>
+      )}
 
-      <Box sx={{ mt: 4, display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 4 }}>
+      <Box
+        sx={{ mt: 4, display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 4 }}
+      >
         {loading ? (
           <p>Lade...</p>
         ) : (
@@ -80,7 +85,10 @@ function Image() {
                   }}
                 />
                 <Box sx={{ mt: 1 }}>
-                  <Typography variant="body3" sx={{ wordBreak: "break-word", whiteSpace: "normal" }}>
+                  <Typography
+                    variant="body3"
+                    sx={{ wordBreak: "break-word", whiteSpace: "normal" }}
+                  >
                     <Link
                       href={imageUrl}
                       sx={{ color: "black", fontSize: "12px" }}
@@ -94,8 +102,19 @@ function Image() {
               </Box>
             )}
             {summary && (
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "justify", maxWidth: "500px" }}>
-                <Typography variant="body3" sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word", }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  textAlign: "justify",
+                  maxWidth: "500px",
+                }}
+              >
+                <Typography
+                  variant="body3"
+                  sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word" }}
+                >
                   {summary}
                 </Typography>
                 {wikiUrl && (
