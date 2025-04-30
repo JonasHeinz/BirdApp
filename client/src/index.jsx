@@ -6,11 +6,11 @@ import Birdmap from "./pages/BirdMap";
 import Stack from "@mui/material/Stack";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <Stack direction="col" spacing={2} sx={{ height: "100vh" }}>
       <Navigation></Navigation>
       <Birdmap></Birdmap>
     </Stack>
-  </StrictMode>
+  // </StrictMode>
 );
 

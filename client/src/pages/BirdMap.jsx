@@ -25,9 +25,8 @@ const BirdMap = () => {
         const counts = features.map((feature) => feature.get("count"));
         const minCount = Math.min(...counts);
         const maxCount = Math.max(...counts);
-        console.log("Min count:", minCount, "Max count:", maxCount);
 
-        const colourScale = chroma.scale("Blues").domain([0, Math.log10(minCount), maxCount]);
+        const colourScale = chroma.scale("YlOrRd").domain([0, minCount, maxCount]);
 
         const vectorSource = new VectorSource({ features });
         
@@ -35,15 +34,15 @@ const BirdMap = () => {
           source: vectorSource,
           style: (feature) => {
             const count = feature.get("count") || 0;
-        
-            // Logge die 'count'-Werte für Debugging
-            console.log("Feature count:", count);
+
         
             return new Style({
               fill: new Fill({
-                color: colourScale(count).hex(),
-                stroke: new Stroke({ color: "transparent", width: 0 }), // Verwende den Farbverlauf basierend auf dem 'count'-Wert
+                color: colourScale(count).alpha(0.5).css(), // 50% transparent
+              
               }),
+              stroke: new Stroke({   color: "#000000", 
+                width: 0.5 }),
               zIndex: 100,
             });
           },
@@ -57,7 +56,7 @@ const BirdMap = () => {
           }),
         });
         
-        vectorLayer.setOpacity(0.6);
+ 
         const view = new View({
           projection: "EPSG:3857",
           center: [924000, 6000000], // ungefähr Zürich in EPSG:3857
@@ -91,7 +90,7 @@ const BirdMap = () => {
     };
   }, []);
 
-  return <div ref={mapRef} style={{ width: "100%", height: "600px" }} />;
+  return <div ref={mapRef} style={{ width: "100%", height: "80vh" }} />;
 };
 
 export default BirdMap;

@@ -198,8 +198,8 @@ def getGeojson():
     end_time = time.time()
     print(f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
     # 7. GeoJSON-Ausgabe zurückgeben
-    filtered_grid5 = grid5[grid5["count"] > 0]
+    # filtered_grid5 = grid5[grid5["count"] > 0]
     return JSONResponse(content={
         # "grid1km": grid1.to_json(),
-        "grid5km": filtered_grid5.to_json()
+        "grid5km": grid5.to_json()
     })
