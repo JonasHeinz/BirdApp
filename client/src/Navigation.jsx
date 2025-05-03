@@ -8,13 +8,8 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemText,
-  Toolbar,
-  AppBar,
   Typography,
-  CssBaseline,
   IconButton,
-  Button,
   Stack,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu"; //
@@ -33,9 +28,6 @@ function Navigation() {
   return (
     <HashRouter>
       <Box>
-        {/* AppBar mit Toggle-Button */}
-
-        {/* Sidebar */}
         <Drawer
           variant="persistent"
           open={open}
@@ -89,13 +81,14 @@ function Navigation() {
             flexGrow: 1,
             marginLeft: open ? `${drawerWidth}px` : 0,
             transition: "margin-left 0.3s",
+            width: "4 0vw"
           }}
         >
           <Stack direction="row">
-            <IconButton onClick={toggleDrawer}>
-              <MenuIcon />
+            <IconButton color="black" onClick={toggleDrawer}>
+              <MenuIcon  color="black" />
             </IconButton>
-            <Typography variant="h4">Birdapp</Typography>
+            <img src="LOGO.png" alt="Birdapp Logo" style={{ height: 80 }} />
           </Stack>
           <Routes>
             <Route path="/" element={<Navigate to="/filter" replace />} />

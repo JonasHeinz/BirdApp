@@ -26,7 +26,7 @@ const BirdMap = () => {
         const minCount = Math.min(...counts);
         const maxCount = Math.max(...counts);
 
-        const colourScale = chroma.scale("YlOrRd").domain([0, minCount, maxCount]);
+        const colourScale = chroma.scale("blues").domain([Math.log10(minCount), Math.log10(maxCount)]);
 
         const vectorSource = new VectorSource({ features });
         
@@ -38,11 +38,10 @@ const BirdMap = () => {
         
             return new Style({
               fill: new Fill({
-                color: colourScale(count).alpha(0.5).css(), // 50% transparent
+                color: colourScale(count).alpha(0.3).css(), // 50% transparent
               
               }),
-              stroke: new Stroke({   color: "#000000", 
-                width: 0.5 }),
+    
               zIndex: 100,
             });
           },
