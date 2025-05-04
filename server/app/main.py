@@ -163,8 +163,8 @@ def get_text(species: str):
 
 
 @app.get("/getGeojson/")
-def getGeojson():
-
+def getGeojson(speciesids):
+    print(speciesids)
     timestart_time = time.time()
     # grid1 = gpd.read_file("data/km_Grid_1.gpkg")
     grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
@@ -176,12 +176,13 @@ def getGeojson():
     # Berechnete Zeit ausgeben
  
 
-    sql ="""
-    SELECT * FROM observations WHERE speciesid = 370
+    sql = f"""
+    SELECT * FROM observations WHERE speciesid IN ({speciesids})
     """    
     conn = db_pool.getconn()
     try:
         sightings = gpd.GeoDataFrame.from_postgis(sql, conn)
+        print(sightings.head(10))
 
     finally:
         db_pool.putconn(conn)
@@ -190,16 +191,19 @@ def getGeojson():
     # grid1["count"] = join1.groupby("index_right").size()
     # grid1["count"] = grid1["count"].fillna(0).astype(int)
 
-    # 6. Spatial Join & Zählung für 5 km Grid
     join5 = gpd.sjoin(grid5, sightings, how="left", predicate="contains")
-    grid5["count"] = join5.groupby("id").size()
-    print(join5.head())
-    grid5["count"] = grid5["count"].fillna(0).astype(int)
+    join5["count"] = join5.groupby("id")["speciesid"].transform("count")
+    join5["count"] = join5["count"].fillna(0).astype(int)
     end_time = time.time()
     print(f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
-    # 7. GeoJSON-Ausgabe zurückgeben
-    filtered_grid5 = grid5[grid5["count"] > 0]
+
+    # 7. Filtere die Zeilen mit count > 0
+    filtered_grid5 = join5[join5["count"] > 0]
+
+    # Extrahiere nur die Spalten 'count' und 'geometry' für die Ausgabe
+    filtered_grid5 = filtered_grid5[["count", "geometry"]]
+
+    # Gebe das GeoDataFrame mit count und Geometrie als GeoJSON zurück
     return JSONResponse(content={
-        # "grid1km": grid1.to_json(),
         "grid5km": filtered_grid5.to_json()
     })

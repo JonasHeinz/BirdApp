@@ -8,7 +8,6 @@ import {
   Drawer,
   List,
   ListItem,
-  Typography,
   IconButton,
   Stack,
 } from "@mui/material";
@@ -18,8 +17,9 @@ import Image from "./pages/infos/Picture";
 
 const drawerWidth = 60;
 
-function Navigation() {
+function Navigation({birds, setBirds}) {
   const [open, setOpen] = useState(true);
+  
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -81,7 +81,8 @@ function Navigation() {
             flexGrow: 1,
             marginLeft: open ? `${drawerWidth}px` : 0,
             transition: "margin-left 0.3s",
-            width: "4 0vw"
+            width: "30vw",
+            height: "100%",
           }}
         >
           <Stack direction="row">
@@ -90,9 +91,9 @@ function Navigation() {
             </IconButton>
             <img src="LOGO.png" alt="Birdapp Logo" style={{ height: 80 }} />
           </Stack>
-          <Routes>
+          <Routes >
             <Route path="/" element={<Navigate to="/filter" replace />} />
-            <Route path="/filter" element={<Filter />} />
+            <Route path="/filter" element={<Filter birds={birds} setBirds={setBirds}/>} />
             <Route path="/image" element={<Image />} />
             <Route path="/image/:latinName" element={<Image />} />
           </Routes>
