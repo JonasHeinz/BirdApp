@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import pool
 import os
 from dotenv import load_dotenv
-from authlib.integrations.requests_client  import OAuth1Session
+from authlib.integrations.requests_client import OAuth1Session
 from app.convertToGeojson import convert_to_geojson
 import requests
 import json
@@ -20,8 +20,6 @@ import time
 
 
 app = FastAPI()
-
-
 
 
 # CORS Einstellungen
@@ -57,21 +55,24 @@ db_pool = pool.SimpleConnectionPool(
     port="5433"
 )
 
+
 def execute_query(query, params=None):
     try:
         conn = db_pool.getconn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(query, params or ())
         conn.commit()
-        return cur.fetchall() 
+        return cur.fetchall()
     except Exception as e:
         print(e)
         # Eine HTTPException mit Statuscode 500 (Interner Serverfehler) auslösen und den ausgelösten Fehler als Detail übergeben
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error: "+str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Internal server error: "+str(e))
     finally:
         if conn:
             # Die Verbindung zur Datenbank beenden
             db_pool.putconn(conn)
+
 
 @app.get("/")
 async def root():
@@ -118,25 +119,24 @@ async def get_species():
     """, 141)
 
 
-
-
-@app.get("/getObservationsSpecies/")
-async def get_species():
-   return execute_query("""
+@app.get("/getObservationsTimeline/")
+async def get_species(date_from, date_to, speciesids):
+    return execute_query("""
     SELECT 
-        s.germanname AS name,
         COUNT(o.*) AS count,
-        s.rarity AS rarity,
-        s.latinname AS latinname
+        o.date
     FROM 
         observations o
     JOIN 
         species s ON o.speciesid = s.speciesid
+    WHERE 
+        o.date BETWEEN %s AND %s
+        AND s.speciesid IN (%s)
     GROUP BY 
-        s.speciesid
+         o.date
     ORDER BY 
         count DESC
-    """)
+    """, (date_from, date_to, speciesids))
     # return [
     #     {"name": "Waldkauz", "anzahl": 2, "species": "rare"},
     #     {"name": "Wasseramsel", "anzahl": 1, "species": "very_rare"},
@@ -155,7 +155,6 @@ def get_image(species: str):
     return JSONResponse(content={"image_url": image_url})
 
 
-
 @app.get("/getText/")
 def get_text(species: str):
     text_data = get_wikipedia_summary(species)
@@ -164,21 +163,19 @@ def get_text(species: str):
 
 @app.get("/getGeojson/")
 def getGeojson(speciesids):
-    print(speciesids)
     timestart_time = time.time()
     # grid1 = gpd.read_file("data/km_Grid_1.gpkg")
     grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
 
-
     end_time = time.time()
-    print(f"Die Ladezeit der GeoJSON-Dateien beträgt: {end_time - timestart_time} Sekunden.")
+    print(
+        f"Die Ladezeit der GeoJSON-Dateien beträgt: {end_time - timestart_time} Sekunden.")
     timestart_time = time.time()
     # Berechnete Zeit ausgeben
- 
 
     sql = f"""
     SELECT * FROM observations WHERE speciesid IN ({speciesids})
-    """    
+    """
     conn = db_pool.getconn()
     try:
         sightings = gpd.GeoDataFrame.from_postgis(sql, conn)
@@ -195,7 +192,8 @@ def getGeojson(speciesids):
     join5["count"] = join5.groupby("id")["speciesid"].transform("count")
     join5["count"] = join5["count"].fillna(0).astype(int)
     end_time = time.time()
-    print(f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
+    print(
+        f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
 
     # 7. Filtere die Zeilen mit count > 0
     filtered_grid5 = join5[join5["count"] > 0]

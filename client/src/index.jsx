@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import Navigation from "./Navigation";
@@ -10,6 +10,7 @@ import { GeoJSON } from "ol/format";
 function App() {
   const [features, setFeatures] = useState([]);
   const [birds, setBirds] = useState([]);
+  const birdIds = useMemo(() => birds.map((bird) => bird.speciesid), [birds]);
 
   useEffect(() => {
     setBirds([{ speciesid: "386", germanname: "Rotkehlchen" }]);
@@ -17,8 +18,7 @@ function App() {
 
   useEffect(() => {
     const fetchGeoJSON = async () => {
-      const birdIds = birds.map((bird) => bird.speciesid);
-  
+    
       try {
         const response = await fetch(`http://localhost:8000/getGeojson/?speciesids=${birdIds.join(",")}`);
         const data = await response.json();
@@ -50,7 +50,7 @@ function App() {
           <Birdmap features={features} />
         </Stack>
         <Stack flex={3} minHeight={0}>
-          <BirdTimeline />
+          <BirdTimeline birdIds={birdIds}/>
         </Stack>
       </Stack>
     </Stack>

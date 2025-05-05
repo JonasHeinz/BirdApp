@@ -1,61 +1,100 @@
-import { useState } from "react";
-import { Slider, Typography, Box } from "@mui/material";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { useState, useEffect } from "react";
+import { Slider, Box, Typography } from "@mui/material";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceArea,
+} from "recharts";
 
-const vogelData = [
-  { date: "2025-01-01", count: 10 },
-  { date: "2025-01-15", count: 15 },
-  { date: "2025-02-01", count: 7 },
-  { date: "2025-03-01", count: 20 },
-];
+const startDate = new Date("2024-04-05T00:00:00Z");
+const endDate = new Date("2025-04-05T00:00:00Z");
+const min = startDate.getTime();
+const max = endDate.getTime();
 
-const timestamps = vogelData.map(d => new Date(d.date).getTime());
-const min = Math.min(...timestamps);
-const max = Math.max(...timestamps);
-
-export default function VogelZeitstrahl() {
+export default function VogelZeitstrahl({ birdIds }) {
+  const [data, setData] = useState([]);
+  const [minMax, setMinMax] = useState([min, max]);
   const [range, setRange] = useState([min, max]);
+
+  useEffect(() => {
+    if (!birdIds || birdIds.length === 0) return;
+
+    const url = `http://localhost:8000/getObservationsTimeline/?speciesids=${birdIds.join(",")}&date_from=${startDate.toISOString()}&date_to=${endDate.toISOString()}`;
+
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const formatted = data
+          .map((item) => ({
+            ...item,
+            date: new Date(item.date).getTime(),
+          }))
+          .sort((a, b) => a.date - b.date);
+
+        setData(formatted);
+
+        if (formatted.length > 0) {
+          const minDate = formatted[0].date;
+          const maxDate = formatted[formatted.length - 1].date;
+          setMinMax([minDate, maxDate]);
+          setRange([minDate, maxDate]);
+        }
+      })
+      .catch((error) => console.error("Fetch-Fehler:", error));
+  }, [birdIds]);
 
   const handleChange = (event, newValue) => {
     setRange(newValue);
   };
 
-  const filtered = vogelData.filter(d => {
-    const time = new Date(d.date).getTime();
-    return time >= range[0] && time <= range[1];
-  });
-
   return (
     <Box p={4}>
-      {/* <Typography variant="h6" gutterBottom>
+      <Typography variant="h6" gutterBottom>
         Sichtungen im gewählten Zeitraum
-      </Typography> */}
+      </Typography>
 
-      <Box height={100} position="relative">
+      <Box height={200} position="relative">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={filtered}>
+          <LineChart data={data}>
             <XAxis
               dataKey="date"
-              tickFormatter={d => new Date(d).toLocaleDateString()}
-              type="category"
-              domain={['auto', 'auto']}
+              tickFormatter={(d) => new Date(d).toLocaleDateString()}
+              type="number"
+              domain={[range[1], range[0]]}
+              scale="time"
             />
             <YAxis />
-            <Tooltip labelFormatter={d => new Date(d).toLocaleDateString()} />
-            <Line type="monotone" dataKey="count" stroke="#2e7d32" />
+            <Tooltip labelFormatter={(d) => new Date(d).toLocaleDateString()} />
+            <Line dataKey="count" stroke="#2e7d32" type="monotone" dot={false} />
+
+            <ReferenceArea
+              x1={range[0]}
+              x2={range[1]}
+              strokeOpacity={0.3}
+              fill="#81c784"
+              fillOpacity={0.3}
+            />
           </LineChart>
         </ResponsiveContainer>
 
-        {/* Slider exakt unterhalb der X-Achse positionieren */}
-        <Box position="absolute" bottom={15} left={65} right={0}>
+        <Box position="absolute" bottom={-40} left={65} right={0}>
           <Slider
             value={range}
             onChange={handleChange}
-            min={min}
-            max={max}
+            min={minMax[0]}
+            max={minMax[1]}
             step={24 * 60 * 60 * 1000}
             valueLabelDisplay="auto"
-            valueLabelFormat={value => new Date(value).toLocaleDateString()}
+            valueLabelFormat={(value) => new Date(value).toLocaleDateString()}
           />
         </Box>
       </Box>
