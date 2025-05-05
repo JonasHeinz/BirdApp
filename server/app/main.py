@@ -137,16 +137,6 @@ async def get_species(date_from, date_to, speciesids):
     ORDER BY 
         count DESC
     """, (date_from, date_to, speciesids))
-    # return [
-    #     {"name": "Waldkauz", "anzahl": 2, "species": "rare"},
-    #     {"name": "Wasseramsel", "anzahl": 1, "species": "very_rare"},
-    #     {"name": "Zaunkönig", "anzahl": 1, "species": "very_rare"},
-    #     {"name": "Graugans", "anzahl": 1, "species": "rare"},
-    #     {"name": "Kohlmeise", "anzahl": 2, "species": "common"},
-    #     {"name": "Blaumeise", "anzahl": 3, "species": "common"},
-    #     {"name": "Rotkehlchen", "anzahl": 3, "species": "common"},
-    #     {"name": "Amsel", "anzahl": 2, "species": "uncommon"}
-    # ]
 
 
 @app.get("/getImage/")
@@ -162,7 +152,7 @@ def get_text(species: str):
 
 
 @app.get("/getGeojson/")
-def getGeojson(speciesids):
+def getGeojson(speciesids, date_from, date_to):
     timestart_time = time.time()
     # grid1 = gpd.read_file("data/km_Grid_1.gpkg")
     grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
@@ -173,12 +163,20 @@ def getGeojson(speciesids):
     timestart_time = time.time()
     # Berechnete Zeit ausgeben
 
-    sql = f"""
-    SELECT * FROM observations WHERE speciesid IN ({speciesids})
+    sql = """
+        SELECT * FROM observations 
+        WHERE speciesid IN (%s)
+        AND date BETWEEN %s AND %s
     """
+
+    params = (speciesids,
+              date_from,
+              date_to,
+    )
+
     conn = db_pool.getconn()
     try:
-        sightings = gpd.GeoDataFrame.from_postgis(sql, conn)
+        sightings = gpd.GeoDataFrame.from_postgis(sql, conn, params=params)
         print(sightings.head(10))
 
     finally:
