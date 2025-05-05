@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { TextField, Button, Box, Link, Typography } from "@mui/material";
+import { TextField, Box, Link, Typography, Autocomplete } from "@mui/material";
 import { useParams } from "react-router";
 
-function Image() {
+function Image({birds, setBirds}) {
   const { latinName: routeLatinName } = useParams();
   const [latinName, setLatinName] = useState(routeLatinName || "");
   const [imageUrl, setImageUrl] = useState(null);
@@ -10,13 +10,21 @@ function Image() {
   const [wikiUrl, setWikiUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [deName, setDeName] = useState(null);
+  const [speciesData, setSpeciesData] = useState([]);
 
-  const fetchImageAndText = () => {
-    if (!latinName.trim()) return;
+  // Daten abrufen
+  useEffect(() => {
+    fetch("http://localhost:8000/getSpecies/")
+      .then((res) => res.json())
+      .then((data) => setSpeciesData(data));
+  }, []);
+
+  const fetchImageAndText = (selectedLatinName) => {
+    if (!selectedLatinName.trim()) return;
     setLoading(true);
 
     // Bild
-    fetch(`http://localhost:8000/getImage/?species=${encodeURIComponent(latinName)}`)
+    fetch(`http://localhost:8000/getImage/?species=${encodeURIComponent(selectedLatinName)}`)
       .then((res) => res.json())
       .then((data) => setImageUrl(data.image_url))
       .catch((err) => {
@@ -25,7 +33,7 @@ function Image() {
       });
 
     // Text
-    fetch(`http://localhost:8000/getText/?species=${encodeURIComponent(latinName)}`)
+    fetch(`http://localhost:8000/getText/?species=${encodeURIComponent(selectedLatinName)}`)
       .then((res) => res.json())
       .then((data) => {
         setSummary(data.summary);
@@ -42,45 +50,68 @@ function Image() {
   };
 
   useEffect(() => {
-    setLatinName(routeLatinName || "");
-    fetchImageAndText();
+    if (routeLatinName) {
+      fetchImageAndText(routeLatinName);
+    }
   }, [routeLatinName]);
 
+  // Funktion, um den Text auf eine bestimmte Anzahl von Sätzen zu kürzen
+  const truncateTextBySentence = (text, maxSentences) => {
+    if (!text) return "";
+    const sentences = text.match(/[^.!?]+[.!?]/g)?.slice(0, maxSentences) || [];
+    return sentences.join(" ").trim();
+  };
+  
+
   return (
-    <Box sx={{ p: 4, textAlign: "center" }}>
-      {/* <TextField
-        label="Lateinischer Name"
-        value={latinName}
-        onChange={(e) => setLatinName(e.target.value)}
-        variant="outlined"
-        size="small"
-        sx={{ mr: 2 }}
-      />
-      <Button variant="contained" onClick={fetchImageAndText}>
-        Laden
-      </Button> */}
+    <Box sx={{ p: 1, textAlign: "center" }}>
+      <Box sx={{ display: "flex", justifyContent: "left", alignItems: "center", gap: 2 }}>
+        <Autocomplete
+          options={speciesData}
+          getOptionLabel={(option) => `${option.germanname} (${option.latinname})`}
+          value={speciesData.find((s) => s.latinname === latinName) || null}
+          onChange={(e, newValue) => {
+            const selectedLatin = newValue?.latinname || "";
+            setLatinName(selectedLatin);
+            fetchImageAndText(selectedLatin);
+          }}
+          filterOptions={(options, state) => {
+            const query = state.inputValue.toLowerCase();
+            return options.filter(
+              (option) =>
+                option.germanname.toLowerCase().includes(query) ||
+                option.latinname.toLowerCase().includes(query) 
+            );
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Vogelart auswählen" variant="outlined" size="small" />
+          )}
+          sx={{ width: 308, justifyContent: "center", alignItems: "center" }}
+        />
+      </Box>
 
       {(deName || latinName) && (
-        <Typography variant="h6" sx={{ color: "black" }}>
-          {deName} {`(${latinName})`}
-        </Typography>
+        <Typography variant="subtitle1" sx={{ color: "black", mt: 2, fontWeight: "bold" }}>
+         {deName} {`(${latinName})`}
+       </Typography>
       )}
 
       <Box
-        sx={{ mt: 4, display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 4 }}
+        sx={{ mt: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}
       >
         {loading ? (
           <p>Lade...</p>
         ) : (
           <>
             {imageUrl && (
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", width: "100%" }}>
+
                 <img
                   src={imageUrl}
                   alt={latinName}
                   style={{
-                    maxWidth: "200px",
-                    maxHeight: "200px",
+                    maxWidth: "400px", 
+                    maxHeight: "150px",
                     objectFit: "cover",
                   }}
                 />
@@ -95,7 +126,7 @@ function Image() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {imageUrl}
+                      Bild-URL
                     </Link>
                   </Typography>
                 </Box>
@@ -115,7 +146,7 @@ function Image() {
                   variant="body3"
                   sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word" }}
                 >
-                  {summary}
+                  {truncateTextBySentence(summary, 3)}
                 </Typography>
                 {wikiUrl && (
                   <Link
@@ -129,7 +160,16 @@ function Image() {
                 )}
               </Box>
             )}
-            {!imageUrl && !summary && <p>Keine Daten gefunden</p>}
+            {!imageUrl && !summary && <Typography
+  variant="body2"
+  sx={{
+    mt: 1,
+    textAlign: "left",  
+    typography: "body2"
+  }}
+>
+  Suche einen Vogel, um Informationen zu erhalten.
+</Typography >}
           </>
         )}
       </Box>

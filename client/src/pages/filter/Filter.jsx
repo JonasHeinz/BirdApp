@@ -32,7 +32,8 @@ function Filter({ birds, setBirds }) {
         return response.json();
       })
       .then((data) => {
-        setAvailableSpecies(data);
+        const sortedSpecies = data.sort((a, b) => a.germanname.localeCompare(b.germanname));
+        setAvailableSpecies(sortedSpecies);
       })
       .catch((error) => setError(error.message));
   }, []);
@@ -45,9 +46,17 @@ function Filter({ birds, setBirds }) {
             multiple
             disableCloseOnSelect
             options={availableSpecies}
-            getOptionLabel={(option) => `${option.germanname}`}
+            getOptionLabel={(option) => `${option.germanname} (${option.latinname})`}  // Anzeigen von deutschem und lateinischem Namen
             value={selectedSpecies}
             onChange={(event, newValue) => setSelectedSpecies(newValue)}
+            filterOptions={(options, state) => {
+              const inputValue = state.inputValue.toLowerCase();
+              return options.filter(
+                (option) =>
+                  option.germanname.toLowerCase().includes(inputValue) ||
+                  option.latinname.toLowerCase().includes(inputValue)
+              );
+            }}
             renderOption={(props, option, { selected }) => {
               const { key, ...restProps } = props;
               return (
@@ -62,9 +71,10 @@ function Filter({ birds, setBirds }) {
                 {...params}
                 variant="outlined"
                 label="Vogelarten auswählen"
-                placeholder="z. B. Stern|taucher"
+                placeholder="z.B. Sterntaucher"
                 error={Boolean(error)}
                 helperText={error}
+                size="small"
               />
             )}
           />
