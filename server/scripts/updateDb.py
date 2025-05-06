@@ -56,7 +56,21 @@ def get_species():
                 id=i.get("id"),
                 family_id=i.get("sempach_id_family")
             )
+            
+def insert_species(rarity, latinname, germanname, id, family_id):
+    try:
 
+
+        sql = """
+        INSERT INTO public.species (rarity, latinname, germanname, speciesid, family_id)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING speciesid
+        """
+        cur.execute(sql, (rarity, latinname, germanname, id, family_id))
+        conn.commit()
+
+    except Exception as e:
+        print("Fehler beim Einfügen:", e)
 
 
 def get_families():
@@ -91,7 +105,7 @@ def insert_families(familyid, latin_name):
 def daterange_weeks(start_date, end_date):
     current = start_date
     while current < end_date:
-        next_week = current + timedelta(days=7)
+        next_week = current + timedelta(days=1)
         yield current, min(next_week - timedelta(days=1), end_date)
         current = next_week
 
@@ -99,7 +113,7 @@ def daterange_weeks(start_date, end_date):
 def getObservations():
     # Request Parameter mm.dd.yyyy
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=365)
+    start_date = end_date - timedelta(days=30)
 
     for chunk_start, chunk_end in daterange_weeks(start_date, end_date):
         
@@ -138,22 +152,9 @@ def insert_observation(isozeit, speciesid, x, y, z):
         print("Fehler beim Einfügen:", e)
 
 
-def insert_species(rarity, latinname, germanname, id, family_id):
-    try:
-
-        sql = """
-        INSERT INTO public.species (rarity, latinname, germanname, speciesid, familyid)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING speciesid
-        """
-        cur.execute(sql, (rarity, latinname, germanname, id, family_id))
-        conn.commit()
-
-    except Exception as e:
-        print("Fehler beim Einfügen:", e)
-
+get_families()
 get_species()
-
+getObservations()
 
 cur.close()
 conn.close()
