@@ -17,7 +17,7 @@ import Image from "./pages/infos/Picture";
 
 const drawerWidth = 60;
 
-function Navigation({birds, setBirds}) {
+function Navigation({birds, setBirds, families, setFamilies}) {
   const [open, setOpen] = useState(true);
   
 
@@ -93,7 +93,7 @@ function Navigation({birds, setBirds}) {
           </Stack>
           <Routes >
             <Route path="/" element={<Navigate to="/filter" replace />} />
-            <Route path="/filter" element={<Filter birds={birds} setBirds={setBirds}/>} />
+            <Route path="/filter" element={<Filter birds={birds} setBirds={setBirds} families={families} setFamilies={setFamilies}/>} />
             <Route path="/image" element={<Image />} />
             <Route path="/image/:latinName" element={<Image />} />
           </Routes>

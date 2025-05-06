@@ -52,9 +52,40 @@ def get_species():
             insert_species(
                 rarity=i.get("rarity"),
                 latinname=i.get("latin_name"),
-                germanname=i.get("german_name"),
-                id=i.get("id")
+                germanname=i.get("german_name").replace("|", "").replace("_", " "),
+                id=i.get("id"),
+                family_id=i.get("sempach_id_family")
             )
+
+
+
+def get_families():
+    # API Request
+    url = f"https://www.ornitho.ch/api/families?user_email={USER_EMAIL}&user_pw={USER_PW}&id_taxo_group=1"
+
+    response = oauth_session.get(url)
+    if response.status_code == 200:
+        len(response.json().get("data", []))
+        for i in response.json().get("data", []):
+        
+            insert_families(
+                familyid=i.get("id"),
+                latin_name=i.get("latin_name"),
+            )
+            
+def insert_families(familyid, latin_name):
+    try:
+
+        sql = """
+        INSERT INTO public.family (id, latin_name)
+        VALUES (%s, %s)
+        """
+        cur.execute(sql, (familyid, latin_name))
+        conn.commit()
+
+    except Exception as e:
+        print("Fehler beim Einfügen:", e)
+
 
 
 def daterange_weeks(start_date, end_date):
@@ -107,22 +138,21 @@ def insert_observation(isozeit, speciesid, x, y, z):
         print("Fehler beim Einfügen:", e)
 
 
-def insert_species(rarity, latinname, germanname, id):
+def insert_species(rarity, latinname, germanname, id, family_id):
     try:
 
         sql = """
-        INSERT INTO public.species (rarity, latinname, germanname, speciesid)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO public.species (rarity, latinname, germanname, speciesid, familyid)
+        VALUES (%s, %s, %s, %s, %s)
         RETURNING speciesid
         """
-        cur.execute(sql, (rarity, latinname, germanname, id))
+        cur.execute(sql, (rarity, latinname, germanname, id, family_id))
         conn.commit()
 
     except Exception as e:
         print("Fehler beim Einfügen:", e)
 
-
-getObservations()
+get_species()
 
 
 cur.close()

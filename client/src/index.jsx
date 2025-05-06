@@ -12,6 +12,7 @@ function App() {
   const endDate = new Date("2025-04-05T00:00:00Z");
   const [features, setFeatures] = useState([]);
   const [birds, setBirds] = useState([]);
+  const [families, setFamilies] = useState([]);
   const birdIds = useMemo(() => birds.map((bird) => bird.speciesid), [birds]);
   const [range, setRange] = useState([startDate, endDate]);
 
@@ -51,7 +52,7 @@ function App() {
 
   return (
     <Stack direction="row" spacing={2} sx={{ height: "100vh" }}>
-      <Navigation birds={birds} setBirds={setBirds} />
+      <Navigation birds={birds} setBirds={setBirds} families={families} setFamilies={setFamilies}/>
       <Stack direction="column" flex={1} spacing={2} minHeight={0}>
         <Stack flex={7} minHeight={0}>
           <Birdmap features={features} />

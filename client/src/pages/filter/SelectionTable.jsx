@@ -33,10 +33,11 @@ export default function BirdTable({ birds, setBirds }) {
           </TableHead>
           <TableBody>
             {birds.map((bird) => (
-              <TableRow key={bird.speciesid}>
+              <TableRow key={bird.speciesid} >
                 <TableCell>{bird.germanname}</TableCell>
                 <TableCell align="right">
                   <IconButton
+                    sx={{ padding: 0 }}
                     aria-label="Mehr Infos"
                     onClick={() =>
                       navigate(`/image/${encodeURIComponent(bird.latinname)}`)
@@ -44,7 +45,7 @@ export default function BirdTable({ birds, setBirds }) {
                   >
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(bird.speciesid)}>
+                  <IconButton onClick={() => handleDelete(bird.speciesid)}sx={{ padding: 0 }}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>

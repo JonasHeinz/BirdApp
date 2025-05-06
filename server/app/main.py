@@ -6,16 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import pool
 import os
 from dotenv import load_dotenv
-from authlib.integrations.requests_client import OAuth1Session
-from app.convertToGeojson import convert_to_geojson
-import requests
-import json
 from pictures import get_image_for_species
 from pictures import get_wikipedia_summary
 from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
 import geopandas as gpd
-from shapely import wkb
 import time
 
 
@@ -65,12 +60,11 @@ def execute_query(query, params=None):
         return cur.fetchall()
     except Exception as e:
         print(e)
-        # Eine HTTPException mit Statuscode 500 (Interner Serverfehler) auslösen und den ausgelösten Fehler als Detail übergeben
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Internal server error: "+str(e))
     finally:
         if conn:
-            # Die Verbindung zur Datenbank beenden
+
             db_pool.putconn(conn)
 
 
@@ -78,9 +72,6 @@ def execute_query(query, params=None):
 async def root():
     return {"message": "Hello GDI Project"}
 
-
-# Erstellt eine About Seite mit HTML Output
-# import HTMLResponse benötigt
 @app.get("/about/")
 def about():
     return HTMLResponse(
@@ -100,28 +91,27 @@ def about():
     )
 
 
-@app.get("/getObservations/")
-async def get_observations():
-
-    # Request Parameter mm.dd.yyyy
-    date_from = "01.01.2025"
-    date_to = "01.01.2025"
-
-    return execute_query("""
-    SELECT * FROM observations WHERE date BETWEEN %s AND %s
-    """, (date_from, date_to))
 
 
 @app.get("/getSpecies/")
 async def get_species():
     return execute_query("""
     SELECT * FROM species
-    """, 141)
+    """)
 
+@app.get("/getFamilies/")
+async def get_families():
+    return execute_query("""
+    SELECT * FROM family
+    """)
 
 @app.get("/getObservationsTimeline/")
-async def get_species(date_from, date_to, speciesids):
-    return execute_query("""
+async def get_Observations_Timeline(date_from, date_to, speciesids):
+    speciesid_list = speciesids.split(",")  # ➜ ['386', '42', '1148']
+    placeholders = ",".join(["%s"] * len(speciesid_list))  # ➜ "%s,%s,%s"
+    params = [date_from, date_to] + speciesid_list
+
+    sql = f"""
     SELECT 
         COUNT(o.*) AS count,
         o.date
@@ -131,12 +121,14 @@ async def get_species(date_from, date_to, speciesids):
         species s ON o.speciesid = s.speciesid
     WHERE 
         o.date BETWEEN %s AND %s
-        AND s.speciesid IN (%s)
+        AND s.speciesid IN ({placeholders})
     GROUP BY 
          o.date
     ORDER BY 
         count DESC
-    """, (date_from, date_to, speciesids))
+    """
+
+    return execute_query(sql, params)
 
 
 @app.get("/getImage/")
@@ -162,17 +154,18 @@ def getGeojson(speciesids, date_from, date_to):
         f"Die Ladezeit der GeoJSON-Dateien beträgt: {end_time - timestart_time} Sekunden.")
     timestart_time = time.time()
     # Berechnete Zeit ausgeben
+    speciesid_list = speciesids.split(",")  # ['12', '123', '12']
+    placeholders = ','.join(['%s'] * len(speciesid_list))
 
-    sql = """
-        SELECT * FROM observations 
-        WHERE speciesid IN (%s)
+    sql = f"""
+        SELECT * FROM observations
+        WHERE speciesid IN ({placeholders})
         AND date BETWEEN %s AND %s
     """
 
-    params = (speciesids,
-              date_from,
-              date_to,
-    )
+   
+
+    params = speciesid_list + [date_from, date_to]
 
     conn = db_pool.getconn()
     try:
