@@ -196,3 +196,40 @@ def getGeojson(speciesids, date_from, date_to):
     return JSONResponse(content={
         "grid5km": filtered_grid5.to_json()
     })
+
+
+
+@app.get("/getHoehenDiagramm")
+def getHoehenDiagramm(species: str):
+    conn = db_pool.getconn()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT speciesid FROM species WHERE latinname = %s", (species,))
+            result = cursor.fetchone()
+            if not result:
+                return JSONResponse(content={"error": "Art nicht gefunden"}, status_code=404)
+            speciesid = result[0]
+
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT
+                    CONCAT(
+                    FLOOR(ST_Z(geom) / 500) * 500, 
+                    '-', 
+                    FLOOR(ST_Z(geom) / 500) * 500 + 499
+                    ) AS elevation,FLOOR(ST_Z(geom) / 500) * 500 AS elevation,
+                    COUNT(*) AS count
+                FROM observations
+                WHERE ST_Z(geom) IS NOT NULL
+                AND speciesid = %s
+                GROUP BY FLOOR(ST_Z(geom) / 500)
+                ORDER BY FLOOR(ST_Z(geom) / 500)
+            """, (speciesid,))
+            rows = cursor.fetchall()
+
+        data = [{"elevation": row[0], "count": row[1]} for row in rows]
+
+    finally:
+        db_pool.putconn(conn)
+
+    return JSONResponse(content=data)

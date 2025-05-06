@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TextField, Button, Box, Link, Typography } from "@mui/material";
 import { useParams } from "react-router";
+import ElevationChart from "../diagramm/Hoehen";
 
 function Image() {
   const { latinName: routeLatinName } = useParams();
@@ -12,7 +13,7 @@ function Image() {
   const [deName, setDeName] = useState(null);
 
   const fetchImageAndText = () => {
-    if (!latinName.trim()) return;
+    if (!latinName.trim()) return;  
     setLoading(true);
 
     // Bild
@@ -129,11 +130,18 @@ function Image() {
                 )}
               </Box>
             )}
-            {!imageUrl && !summary && <p>Keine Daten gefunden</p>}
+            {!imageUrl && !summary && <p>Keine Daten gefunden</p>} 
           </>
         )}
       </Box>
+      {latinName && (
+        <Box sx={{ mt: 4, ml: -4 }}>
+        <Typography sx= {{ mb: 5, ml: 1 }} variant="h6">Vogelsichtungen nach Höhe</Typography>
+        <ElevationChart latinName={latinName} />
+        </Box>
+        )}
     </Box>
+    
   );
 }
 
