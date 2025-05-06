@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { TextField, Box, Link, Typography, Autocomplete } from "@mui/material";
 import { useParams } from "react-router";
 
-function Image({birds, setBirds}) {
+function Image() {
   const { latinName: routeLatinName } = useParams();
   const [latinName, setLatinName] = useState(routeLatinName || "");
   const [imageUrl, setImageUrl] = useState(null);
