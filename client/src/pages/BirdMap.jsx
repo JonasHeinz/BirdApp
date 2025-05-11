@@ -3,21 +3,20 @@ import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
-import XYZ from "ol/source/XYZ";
-import VectorSource from "ol/source/Vector";
+import { XYZ, Vector as VectorSource } from "ol/source";
 import { Fill, Stroke, Style } from "ol/style";
-import chroma from "chroma-js";
 import { GeoJSON } from "ol/format";
-import { Feature } from "ol";
-import { Polygon } from "ol/geom";
+import chroma from "chroma-js";
+import { transformExtent } from "ol/proj";
+import debounce from "lodash.debounce";  // Importiere debounce
 
-const BirdMap = ({ features }) => {
-  const mapRef = useRef(null);
-  const olMapRef = useRef(null);
-  const [swissPolygon, setSwissPolygon] = useState(null); // Zustand für die Schweiz-Umrandung
+const BirdMap = ({ birdIds, familiesIds, range }) => {
+  const mapRef = useRef(null);           // HTML-Element für die Karte
+  const olMapRef = useRef(null);         // OpenLayers-Map Referenz
+  const currentLayerRef = useRef(null);  // Aktueller Grid-Layer
 
+  // Initialisiere Karte nur beim ersten Laden
   useEffect(() => {
-    // Karte nur einmal initialisieren
     const baseLayer = new TileLayer({
       source: new XYZ({
         url: "https://cartodb-basemaps-{a-c}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png",
@@ -28,7 +27,7 @@ const BirdMap = ({ features }) => {
 
     const view = new View({
       projection: "EPSG:3857",
-      center: [924000, 6000000], // ungefähr Zürich
+      center: [924000, 6000000],
       zoom: 7,
       maxZoom: 12,
       minZoom: 6,
@@ -43,102 +42,95 @@ const BirdMap = ({ features }) => {
 
     olMapRef.current = map;
 
+
     return () => {
       map.setTarget(null);
     };
   }, []);
 
+  // Lade Grid-Daten bei Änderungen
   useEffect(() => {
-    // Fetch GeoJSON für die Schweiz-Umrandung
-    fetch("Umrisse_CH.geojson")
-      .then((res) => res.json())
-      .then((geojsonData) => {
+    if (!olMapRef.current) return;
+    const map = olMapRef.current;
+
+    // Funktion zum Abrufen von Grid-Daten
+    const fetchGrid = async () => {
+      const view = map.getView();
+      const zoom = view.getZoom();
+      const extent3857 = view.calculateExtent();
+      const extent4326 = transformExtent(extent3857, "EPSG:3857", "EPSG:4326");
+      const bbox = extent4326;
+      const gridType = zoom < 9 ? "grid5" : "grid1";
+
+      try {
+        const res = await fetch("http://localhost:8000/getGeojson/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            grid: gridType,
+            bbox: bbox,
+            speciesids: birdIds,
+            familiesIds: familiesIds,
+            date_from: range[0].toISOString(),
+            date_to: range[1].toISOString(),
+          }),
+        });
+
+        const data = await res.json();
+
         const format = new GeoJSON();
-        const swissFeatures = format.readFeatures(geojsonData, {
-          dataProjection: "EPSG:2056", // LV95
-          featureProjection: "EPSG:3857", // Web Mercator
+        const features = format.readFeatures(data.grid, {
+          dataProjection: "EPSG:4326",
+          featureProjection: "EPSG:3857",
         });
 
-        const swissGeometry = swissFeatures[0].getGeometry();
-        setSwissPolygon(swissGeometry); // Schweiz-Polygon setzen
-      })
-      .catch((error) => console.error("Fehler beim Laden der GeoJSON-Datei:", error));
-  }, []);
+        const counts = features.map(f => f.get("count") || 0);
+        const [min, max] = [Math.min(...counts), Math.max(...counts)];
+        const scale = chroma.scale("blues").domain([Math.log10(min || 1), Math.log10(max || 1)]);
 
-  useEffect(() => {
-    if (!swissPolygon || !olMapRef.current) return;
-
-    // Welt-Polygon erstellen (dunkel abdecken)
-    const worldPolygon = new Polygon([
-      [
-        [-180, -90],
-        [-180, 90],
-        [180, 90],
-        [180, -90],
-        [-180, -90],
-      ],
-    ]);
-    worldPolygon.transform("EPSG:4326", "EPSG:3857");
-
-    const maskPolygon = new Polygon([worldPolygon.getCoordinates()[0], ...swissPolygon.getCoordinates()]);
-    const maskFeature = new Feature(maskPolygon);
-
-    const maskLayer = new VectorLayer({
-      source: new VectorSource({
-        features: [maskFeature],
-      }),
-      style: new Style({
-        fill: new Fill({
-          color: "rgba(0, 0, 0, 0.5)", // Abdunkelung außerhalb der Schweiz
-        }),
-      }),
-    });
-
-    olMapRef.current.addLayer(maskLayer);
-
-    return () => {
-      // Entferne den Masken-Layer bei der Bereinigung
-      olMapRef.current.removeLayer(maskLayer);
-    };
-  }, [swissPolygon]);
-
-  useEffect(() => {
-    if (!olMapRef.current || !features || features.length === 0) return;
-
-    const counts = features.map((feature) => feature.get("count"));
-    const minCount = Math.min(...counts);
-    const maxCount = Math.max(...counts);
-
-    const colourScale = chroma.scale("blues").domain([Math.log10(minCount), Math.log10(maxCount)]);
-
-    const vectorSource = new VectorSource({ features });
-
-    const vectorLayer = new VectorLayer({
-      source: vectorSource,
-      style: (feature) => {
-        const count = feature.get("count") || 0;
-
-        return new Style({
-          fill: new Fill({ color: colourScale(count).alpha(0.3).css() }),
-          stroke: new Stroke({ color: colourScale(count).alpha(1).css(), width: 1 }),
-          zIndex: 100,
+        const vectorSource = new VectorSource({ features });
+        const newLayer = new VectorLayer({
+          source: vectorSource,
+          style: (feature) => {
+            const count = feature.get("count") || 0;
+            return new Style({
+              fill: new Fill({ color: scale(Math.log10(count || 1)).alpha(0.3).css() }),
+              stroke: new Stroke({ color: scale(Math.log10(count || 1)).alpha(1).css(), width: 1 }),
+              zIndex: 100,
+            });
+          },
         });
-      },
-    });
 
-    olMapRef.current.addLayer(vectorLayer);
+        if (currentLayerRef.current) {
+          map.removeLayer(currentLayerRef.current);
+        }
+        console.log("Grid data:", newLayer);
+        map.addLayer(newLayer);
+        currentLayerRef.current = newLayer;
+      } catch (err) {
+        console.error("Fehler beim Laden des Grids:", err);
+      }
+    };
 
-    olMapRef.current.getView().fit(vectorSource.getExtent(), {
-      padding: [20, 20, 20, 20],
-      duration: 500,
-    });
+    // Verwende debounce, um die `fetchGrid`-Funktion nur einmal alle 300ms auszuführen
+    const debouncedFetchGrid = debounce(fetchGrid, 300);
+
+    // Lässt die Funktion ausführen, wenn der Kartenbereich sich ändert
+    map.on("moveend", debouncedFetchGrid);
+
+    // Initiale Anfrage
+    debouncedFetchGrid();
 
     return () => {
-      olMapRef.current.removeLayer(vectorLayer);
+      map.un("moveend", debouncedFetchGrid);
+      if (currentLayerRef.current) {
+        map.removeLayer(currentLayerRef.current);
+        currentLayerRef.current = null;
+      }
     };
-  }, [features]);
+  }, [birdIds, familiesIds, range]);
 
-  return <div ref={mapRef} style={{ width: "100%", height: "80vh" }} />;
+  return <div ref={mapRef} style={{ width: "100%", height: "65vh" }} />;
 };
 
 export default BirdMap;

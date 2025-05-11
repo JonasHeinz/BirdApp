@@ -17,12 +17,12 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
   const [tempRange, setTempRange] = useState([range[0].getTime(), range[1].getTime()]);
 
   const handleChange = (event, newValue) => {
-    setTempRange(newValue); // Nur den temporären Wert aktualisieren
+    setTempRange(newValue);
   };
 
   const handleChangeCommitted = (event, newValue) => {
     const newRange = newValue.map((ts) => new Date(ts));
-    setRange(newRange); // Erst hier wird App-State aktualisiert → löst API-Call aus
+    setRange(newRange);
   };
 
   useEffect(() => {
@@ -59,12 +59,12 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
   }, [birdIds]);
 
   return (
-    <Box p={4}>
+    <Box p={2}>
       <Typography variant="h6" gutterBottom>
         Sichtungen im gewählten Zeitraum
       </Typography>
 
-      <Box height={200} position="relative">
+      <Box height={"20vh"} position="relative">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
             <XAxis
@@ -87,8 +87,9 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
           </LineChart>
         </ResponsiveContainer>
 
-        <Box position="absolute" bottom={-40} left={65} right={0}>
+        <Box position="absolute" bottom={16} left={65} right={5}>
           <Slider
+            size="small"
             value={tempRange}
             onChange={handleChange}
             onChangeCommitted={handleChangeCommitted}
@@ -97,6 +98,7 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
             step={24 * 60 * 60 * 1000}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => new Date(value).toLocaleDateString()}
+       
           />
         </Box>
       </Box>

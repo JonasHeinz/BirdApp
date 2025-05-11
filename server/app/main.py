@@ -1,24 +1,18 @@
 from fastapi import FastAPI, HTTPException, status
-from fastapi.responses import HTMLResponse
-# CORS aktivieren für FastAPI Backend
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-# Datenbank Verbindung
 from psycopg2 import pool
-import os
-from dotenv import load_dotenv
-from pictures import get_image_for_species
-from pictures import get_wikipedia_summary
-from fastapi.responses import JSONResponse
 from psycopg2.extras import RealDictCursor
+from shapely.geometry import box
 import geopandas as gpd
+import os
 import time
-
+from dotenv import load_dotenv
+from pictures import get_image_for_species, get_wikipedia_summary
 
 app = FastAPI()
 
-
-# CORS Einstellungen
-# siehe: https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware
+# CORS-Einstellungen
 origins = [
     "*",
     "http://localhost",
@@ -26,7 +20,6 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173"
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -35,14 +28,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# .env Variablen laden
+# .env laden
 load_dotenv()
 DB_PASSWD = os.getenv("DB_PASSWD")
 
-
 db_pool = pool.SimpleConnectionPool(
-    minconn=1,              # Mindestanzahl an offenen Verbindungen
-    maxconn=10,             # Maximalanzahl
+    minconn=1,
+    maxconn=10,
     dbname="BirdApp",
     user="postgres",
     password=DB_PASSWD,
@@ -51,7 +43,11 @@ db_pool = pool.SimpleConnectionPool(
 )
 
 
+grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
+grid1 = gpd.read_file("data/km_Grid_1_wgs84.geojson")
+
 def execute_query(query, params=None):
+    conn = None
     try:
         conn = db_pool.getconn()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -60,13 +56,10 @@ def execute_query(query, params=None):
         return cur.fetchall()
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Internal server error: "+str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
     finally:
         if conn:
-
             db_pool.putconn(conn)
-
 
 @app.get("/")
 async def root():
@@ -76,66 +69,46 @@ async def root():
 def about():
     return HTMLResponse(
         """
-    <html>
-      <head>
-        <title>FAST API Service</title>
-      </head>
-      <body>
-        <div align="center">
-          <h1>Simple FastAPI Server About Page</h1>
-          <p>Dieser FastAPI Rest Server bietet eine einfache REST Schnittstelle. Die Dokumentation ist über <a href="http://localhost:8000/docs">http://localhost:8000/docs</a> verfügbar.</p> 
-        </div>
-      </body>
-    </html>
-    """
+        <html>
+          <head><title>FAST API Service</title></head>
+          <body>
+            <div align="center">
+              <h1>Simple FastAPI Server About Page</h1>
+              <p>Dokumentation unter <a href="/docs">/docs</a></p>
+            </div>
+          </body>
+        </html>
+        """
     )
-
-
-
 
 @app.get("/getSpecies/")
 async def get_species():
-    return execute_query("""
-    SELECT * FROM species
-    """)
+    return execute_query("SELECT * FROM species")
 
 @app.get("/getFamilies/")
 async def get_families():
-    return execute_query("""
-    SELECT * FROM family
-    """)
+    return execute_query("SELECT * FROM family")
 
 @app.get("/getObservationsTimeline/")
-async def get_Observations_Timeline(date_from, date_to, speciesids):
-    speciesid_list = speciesids.split(",")  # ➜ ['386', '42', '1148']
-    placeholders = ",".join(["%s"] * len(speciesid_list))  # ➜ "%s,%s,%s"
-    params = [date_from, date_to] + speciesid_list
-
+async def get_observations_timeline(date_from: str, date_to: str, speciesids: str):
+    speciesid_list = speciesids.split(",")
+    placeholders = ",".join(["%s"] * len(speciesid_list))
     sql = f"""
-    SELECT 
-        COUNT(o.*) AS count,
-        o.date
-    FROM 
-        observations o
-    JOIN 
-        species s ON o.speciesid = s.speciesid
-    WHERE 
-        o.date BETWEEN %s AND %s
-        AND s.speciesid IN ({placeholders})
-    GROUP BY 
-         o.date
-    ORDER BY 
-        count DESC
+        SELECT COUNT(o.*) AS count, o.date
+        FROM observations o
+        JOIN species s ON o.speciesid = s.speciesid
+        WHERE o.date BETWEEN %s AND %s
+          AND s.speciesid IN ({placeholders})
+        GROUP BY o.date
+        ORDER BY count DESC
     """
-
+    params = [date_from, date_to] + speciesid_list
     return execute_query(sql, params)
-
 
 @app.get("/getImage/")
 def get_image(species: str):
     image_url = get_image_for_species(species)
     return JSONResponse(content={"image_url": image_url})
-
 
 @app.get("/getText/")
 def get_text(species: str):
@@ -143,56 +116,66 @@ def get_text(species: str):
     return JSONResponse(content=text_data)
 
 
-@app.get("/getGeojson/")
-def getGeojson(speciesids, date_from, date_to):
-    timestart_time = time.time()
-    # grid1 = gpd.read_file("data/km_Grid_1.gpkg")
-    grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
+from typing import List, Optional
+from pydantic import BaseModel
 
-    end_time = time.time()
-    print(
-        f"Die Ladezeit der GeoJSON-Dateien beträgt: {end_time - timestart_time} Sekunden.")
-    timestart_time = time.time()
-    # Berechnete Zeit ausgeben
-    speciesid_list = speciesids.split(",")  # ['12', '123', '12']
-    placeholders = ','.join(['%s'] * len(speciesid_list))
+class GeoJsonRequest(BaseModel):
+    speciesids: Optional[List[int]] = []
+    familiesIds: Optional[List[int]] = []
+    date_from: str
+    date_to: str
+    grid: str = "grid5"
+    bbox: Optional[List[float]] = []
 
-    sql = f"""
-        SELECT * FROM observations
-        WHERE speciesid IN ({placeholders})
-        AND date BETWEEN %s AND %s
-    """
+@app.post("/getGeojson/")
+def get_geojson(request: GeoJsonRequest):
 
    
+    grid_gdf = grid1 if request.grid == "grid1" else grid5
+   
 
-    params = speciesid_list + [date_from, date_to]
+    if request.grid == "grid1": 
+        grid_gdf = grid_gdf[grid_gdf.intersects(box(request.bbox[0], request.bbox[1], request.bbox[2], request.bbox[3]))]
+
+
+    where_clause = []
+    params = []
+
+    if request.speciesids:
+        placeholders = ",".join(["%s"] * len(request.speciesids))
+        where_clause.append(f"s.speciesid IN ({placeholders})")
+        params.extend(request.speciesids)
+
+    if request.familiesIds:
+        placeholders = ",".join(["%s"] * len(request.familiesIds))
+        where_clause.append(f"s.family_id IN ({placeholders})")
+        params.extend(request.familiesIds)
+
+    if not where_clause:
+        return JSONResponse(content={"grid": grid_gdf[["geometry"]].to_json()})
+
+    where_sql = " OR ".join(where_clause)
+    
+    sql = f"""
+        SELECT o.*
+        FROM observations o
+        JOIN species s ON o.speciesid = s.speciesid
+        WHERE ({where_sql})
+          AND o.date BETWEEN %s AND %s
+    """
+    params += [request.date_from, request.date_to]
 
     conn = db_pool.getconn()
     try:
         sightings = gpd.GeoDataFrame.from_postgis(sql, conn, params=params)
-        print(sightings.head(10))
-
     finally:
         db_pool.putconn(conn)
 
-    # join1 = gpd.sjoin(grid1, sightings, how="left", predicate="contains")
-    # grid1["count"] = join1.groupby("index_right").size()
-    # grid1["count"] = grid1["count"].fillna(0).astype(int)
+    if sightings.empty:
+        return JSONResponse(content={"grid": grid_gdf[["geometry"]].to_json()})
 
-    join5 = gpd.sjoin(grid5, sightings, how="left", predicate="contains")
-    join5["count"] = join5.groupby("id")["speciesid"].transform("count")
-    join5["count"] = join5["count"].fillna(0).astype(int)
-    end_time = time.time()
-    print(
-        f"Die Ladezeit des Join beträgt: {end_time - timestart_time} Sekunden.")
+    joined = gpd.sjoin(grid_gdf, sightings, how="left", predicate="contains")
+    joined["count"] = joined.groupby("id")["speciesid"].transform("count").fillna(0).astype(int)
+    filtered = joined[joined["count"] > 0][["count", "geometry"]]
 
-    # 7. Filtere die Zeilen mit count > 0
-    filtered_grid5 = join5[join5["count"] > 0]
-
-    # Extrahiere nur die Spalten 'count' und 'geometry' für die Ausgabe
-    filtered_grid5 = filtered_grid5[["count", "geometry"]]
-
-    # Gebe das GeoDataFrame mit count und Geometrie als GeoJSON zurück
-    return JSONResponse(content={
-        "grid5km": filtered_grid5.to_json()
-    })
+    return JSONResponse(content={"grid": filtered.to_json()})

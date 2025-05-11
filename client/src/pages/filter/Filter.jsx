@@ -5,10 +5,12 @@ import {
   TextField,
   Checkbox,
   Button,
+  Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import SelectionTable from "./SelectionTable";
 import AddIcon from "@mui/icons-material/Add";
+
 
 function Filter({ birds, setBirds, setFamilies, families }) {
 
@@ -16,7 +18,6 @@ function Filter({ birds, setBirds, setFamilies, families }) {
   const [availableSpecies, setAvailableSpecies] = useState([]);
   const [selectedFamilies, setSelectedFamilies] = useState([]);
   const [availableFamilies, setAvailableFamilies] = useState([]);
-  const [error, setError] = useState(null);
 
   const handleAddBirds = () => {
     const newBirds = selectedSpecies.filter((s) => !birds.some((b) => b.speciesid === s.speciesid));
@@ -25,13 +26,26 @@ function Filter({ birds, setBirds, setFamilies, families }) {
     setSelectedSpecies([]);
   };
   const handleAddFamilies = () => {
-    const newfamilies = selectedSpecies.filter((s) => !families.some((b) => b.speciesid === s.speciesid));
-    const updatedfamilies = [...families, ...newfamilies];
-
-    setFamilies(updatedfamilies);
-    setSelectedSpecies([]);
+    const newFamilies = selectedFamilies.filter(
+      (s) => !families.some((b) => b.fam === s.id)
+    );
+    const updatedFamilies = [...families, ...newFamilies];
+    setFamilies(updatedFamilies);
+    setSelectedFamilies([]);
+  
+    // Neue Arten anhand der ausgewählten Familien finden:
+    const selectedFamilyIds = selectedFamilies.map((fam) => fam.id);
+    const birdsFromFamilies = availableSpecies.filter((species) =>
+      selectedFamilyIds.includes(species.family_id)
+    );
+  
+    // Nur neue Arten hinzufügen, die noch nicht in der Liste sind:
+    const newBirds = birdsFromFamilies.filter(
+      (s) => !birds.some((b) => b.speciesid === s.speciesid)
+    );
+    const updatedBirds = [...birds, ...newBirds];
+    setBirds(updatedBirds);
   };
-
   useEffect(() => {
     fetch("http://localhost:8000/getSpecies/")
       .then((response) => {
@@ -43,7 +57,6 @@ function Filter({ birds, setBirds, setFamilies, families }) {
       .then((data) => {
         setAvailableSpecies(data);
       })
-      .catch((error) => setError(error.message));
   }, []);
 
   useEffect(() => {
@@ -57,12 +70,13 @@ function Filter({ birds, setBirds, setFamilies, families }) {
       .then((data) => {
         setAvailableFamilies(data);
       })
-      .catch((error) => setError(error.message));
   }, []);
 
   return (
     <Stack spacing={2} sx={{ padding: 1 }}>
+      <Typography variant="h6">Vögel der karte hinzufügen:</Typography>
       <Stack direction="row" spacing={1} alignItems="center">
+ 
         <FormControl sx={{ flex: 1 }}>
           <Autocomplete
             multiple
