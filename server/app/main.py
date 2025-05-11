@@ -175,7 +175,9 @@ def get_geojson(request: GeoJsonRequest):
         return JSONResponse(content={"grid": grid_gdf[["geometry"]].to_json()})
 
     joined = gpd.sjoin(grid_gdf, sightings, how="left", predicate="contains")
-    joined["count"] = joined.groupby("id")["speciesid"].transform("count").fillna(0).astype(int)
+    grouped_counts = joined.groupby("id")["observationid"].agg("count")
+    joined["count"] = grouped_counts.fillna(0).astype(int)
+
     filtered = joined[joined["count"] > 0][["count", "geometry"]]
 
     return JSONResponse(content={"grid": filtered.to_json()})
