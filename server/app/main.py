@@ -214,14 +214,14 @@ def getHoehenDiagramm(species: str):
             cursor.execute("""
                 SELECT
                     CONCAT(
-                    FLOOR(ST_Z(geom) / 500) * 500, 
-                    '-', 
-                    FLOOR(ST_Z(geom) / 500) * 500 + 499
-                    ) AS elevation,FLOOR(ST_Z(geom) / 500) * 500 AS elevation,
+                        FLOOR(ST_Z(geom) / 500) * 500,
+                        '-',
+                        FLOOR(ST_Z(geom) / 500) * 500 + 499
+                    ) AS elevation_label,
                     COUNT(*) AS count
                 FROM observations
                 WHERE ST_Z(geom) IS NOT NULL
-                AND speciesid = %s
+                    AND speciesid = %s
                 GROUP BY FLOOR(ST_Z(geom) / 500)
                 ORDER BY FLOOR(ST_Z(geom) / 500)
             """, (speciesid,))
