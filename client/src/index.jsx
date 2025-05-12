@@ -8,7 +8,7 @@ import Stack from "@mui/material/Stack";
 
 
 function App() {
-  const startDate = new Date("2024-04-05T00:00:00Z");
+  const startDate = new Date("2024-05-04T00:00:00Z");
   const endDate = new Date("2025-04-05T00:00:00Z");
 
   const [birds, setBirds] = useState([]);
@@ -26,7 +26,7 @@ function App() {
       <Navigation birds={birds} setBirds={setBirds} families={families} setFamilies={setFamilies} />
       <Stack direction="column"  maxHeight={"100vh"} width="100%">
           <Birdmap birdIds={birdIds} range={range} familiesIds={familiesIds} /> 
-          <BirdTimeline birdIds={birdIds} range={range} setRange={setRange} />
+          <BirdTimeline birdIds={birdIds} range={range} setRange={setRange} startDate={startDate} endDate={endDate}/>
       </Stack>
     </Stack>
   );

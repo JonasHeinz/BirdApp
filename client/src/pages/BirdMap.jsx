@@ -7,19 +7,18 @@ import { XYZ, Vector as VectorSource } from "ol/source";
 import { Fill, Stroke, Style } from "ol/style";
 import { GeoJSON } from "ol/format";
 import chroma from "chroma-js";
-import { transformExtent } from "ol/proj";
-import debounce from "lodash.debounce";  // Importiere debounce
-import { CircularProgress, Typography } from "@mui/material"; // Importiere CircularProgress
-import { ScaleLine } from "ol/control"; // Maßstab hinzufügen
+import { CircularProgress, Typography } from "@mui/material";
+import { ScaleLine } from "ol/control";
 
 const BirdMap = ({ birdIds, familiesIds, range }) => {
-  const mapRef = useRef(null);           // HTML-Element für die Karte
-  const olMapRef = useRef(null);         // OpenLayers-Map Referenz
-  const currentLayerRef = useRef(null);  // Aktueller Grid-Layer
-  const [loading, setLoading] = useState(false); // Ladezustand
-  const [legendData, setLegendData] = useState([]); // Speichern der Zählwerte für die Legende
+  const mapRef = useRef(null);
+  const olMapRef = useRef(null);
+  const grid1LayerRef = useRef(null);
+  const grid5LayerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [legendData, setLegendData] = useState(null);
+  const [hoverCount, setHoverCount] = useState(null);
 
-  // Initialisiere Karte nur beim ersten Laden
   useEffect(() => {
     const baseLayer = new TileLayer({
       source: new XYZ({
@@ -42,9 +41,25 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
       target: mapRef.current,
       layers: [baseLayer],
       view,
-      controls: [
-        new ScaleLine({ units: "metric" }) // Maßstab hinzufügen
-      ]
+      controls: [new ScaleLine({ units: "metric" })],
+    });
+
+    map.on("pointermove", (event) => {
+      const feature = map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
+      if (feature) {
+        // Beim Hover über ein Feature wird der Count angezeigt
+        setHoverCount(feature.get("count"));
+      } else {
+        // Wenn der Mauszeiger nichts berührt, setze den Count zurück
+        setHoverCount(null);
+      }
+    });
+    map.on("moveend", () => {
+      const zoom = map.getView().getZoom();
+      if (grid1LayerRef.current && grid5LayerRef.current) {
+        grid1LayerRef.current.setVisible(zoom >= 9);
+        grid5LayerRef.current.setVisible(zoom < 9);
+      }
     });
 
     olMapRef.current = map;
@@ -54,121 +69,128 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     };
   }, []);
 
-  // Lade Grid-Daten bei Änderungen
   useEffect(() => {
     if (!olMapRef.current) return;
     const map = olMapRef.current;
 
-    // Funktion zum Abrufen von Grid-Daten
-    const fetchGrid = async () => {
-      const view = map.getView();
-      const zoom = view.getZoom();
-      const extent3857 = view.calculateExtent();
-      const extent4326 = transformExtent(extent3857, "EPSG:3857", "EPSG:4326");
-      const bbox = extent4326;
-      const gridType = zoom < 9 ? "grid5" : "grid1";
-      setLoading(true);
+    // Alte Layer entfernen
+    if (grid1LayerRef.current) {
+      map.removeLayer(grid1LayerRef.current);
+      grid1LayerRef.current = null;
+    }
+    if (grid5LayerRef.current) {
+      map.removeLayer(grid5LayerRef.current);
+      grid5LayerRef.current = null;
+    }
 
-      try {
-        const res = await fetch("http://localhost:8000/getGeojson/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            grid: gridType,
-            bbox: bbox,
-            speciesids: birdIds,
-            familiesIds: familiesIds,
-            date_from: range[0].toISOString(),
-            date_to: range[1].toISOString(),
-          }),
-        });
+    setLoading(true);
 
-        const data = await res.json();
-
+    fetch("http://localhost:8000/getGeojson/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        speciesids: birdIds,
+        familiesIds: familiesIds,
+        date_from: range[0].toISOString(),
+        date_to: range[1].toISOString(),
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
         const format = new GeoJSON();
-        const features = format.readFeatures(data.grid, {
-          dataProjection: "EPSG:4326",
-          featureProjection: "EPSG:3857",
+
+        // Funktionen zur Feature-Verarbeitung
+        const processFeatures = (geojsonData) => {
+          const features = format.readFeatures(geojsonData, {
+            dataProjection: "EPSG:4326",
+            featureProjection: "EPSG:3857",
+          });
+          const counts = features.map((f) => f.get("count") || 0);
+          return { features, counts };
+        };
+
+        const grid1 = processFeatures(data.grid1);
+        const grid5 = processFeatures(data.grid5);
+        const allCounts = [...grid1.counts, ...grid5.counts];
+        const min = Math.min(...allCounts);
+        const max = Math.max(...allCounts);
+
+        const scale = chroma.scale("blues").domain([Math.log10(min || 0), Math.log10(max || 0)]);
+
+        const createLayer = (features, visible) => {
+          return new VectorLayer({
+            source: new VectorSource({ features }),
+            visible,
+            style: (feature) => {
+              const count = feature.get("count") || 0;
+              return new Style({
+                fill: new Fill({ color: scale(Math.log10(count || 0)).css() }),
+                stroke: new Stroke({ color: "#333", width: 1 }),
+              });
+            },
+          });
+        };
+
+        const zoom = map.getView().getZoom();
+        const layer1 = createLayer(grid1.features, zoom >= 9);
+        const layer5 = createLayer(grid5.features, zoom < 9);
+
+        map.addLayer(layer1);
+        map.addLayer(layer5);
+        grid1LayerRef.current = layer1;
+        grid5LayerRef.current = layer5;
+
+        setLegendData({
+          scale,
+          min: min,
+          max: max,
         });
-
-        const counts = features.map(f => f.get("count") || 0);
-        const min = Math.min(...counts);
-        const max = Math.max(...counts);
-
-        // Farbverlauf (Gradient) erstellen
-        const scale = chroma.scale("blues").domain([Math.log10(min || 1), Math.log10(max || 1)]);
-
-        const vectorSource = new VectorSource({ features });
-        const newLayer = new VectorLayer({
-          source: vectorSource,
-          style: (feature) => {
-            const count = feature.get("count") || 0;
-            const logCount = Math.log10(count || 1);
-            let color = scale(logCount).css();
-
-            return new Style({
-              fill: new Fill({ color: color }),
-              stroke: new Stroke({ color: color, width: 1 }),
-              zIndex: 100,
-            });
-          },
-        });
-
-        if (currentLayerRef.current) {
-          map.removeLayer(currentLayerRef.current);
-        }
-        console.log("Grid data:", newLayer);
-        map.addLayer(newLayer);
-        currentLayerRef.current = newLayer;
-
-        // Speichern der Farbverlauf-Daten für die Legende
-        setLegendData({ min, max, scale });
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error("Fehler beim Laden des Grids:", err);
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-
-    // Verwende debounce, um die `fetchGrid`-Funktion nur einmal alle 300ms auszuführen
-    const debouncedFetchGrid = debounce(fetchGrid, 300);
-
-    // Lässt die Funktion ausführen, wenn der Kartenbereich sich ändert
-    map.on("moveend", debouncedFetchGrid);
-
-    // Initiale Anfrage
-    debouncedFetchGrid();
-
-    return () => {
-      map.un("moveend", debouncedFetchGrid);
-      if (currentLayerRef.current) {
-        map.removeLayer(currentLayerRef.current);
-        currentLayerRef.current = null;
-      }
-    };
+      });
   }, [birdIds, familiesIds, range]);
 
-  // Funktion zum Erstellen der Legende mit Farbverlauf
   const createLegend = () => {
-    if (!legendData.scale) return null;
+    if (!legendData || !legendData.scale) return null;
 
-    // Erstelle ein Gradienten-Element (linearer Farbverlauf)
-    const gradientStyle = {
-      background: `linear-gradient(to right, ${legendData.scale.colors()})`,
-      height: '20px',
-      width: '150px',
-      margin: '10px 0',
-    };
+    const gradientColors = legendData.scale.colors(6); // Mehr Farben = glatter Verlauf
 
     return (
       <div style={{
-        position: "absolute", top: "10px", right: "10px", padding: "10px", zIndex: 1000
+        position: "absolute",
+        top: "10px",
+        right: "10px",
+        padding: "10px",
+        zIndex: 1000,
+        backgroundColor: "white",
+        borderRadius: "8px",
+        boxShadow: "0 0 5px rgba(0,0,0,0.2)"
       }}>
         <Typography variant="h6">Legende</Typography>
-        <div style={gradientStyle}></div>
-        <Typography variant="body2" style={{ fontSize: "14px" }}>
-          {legendData.min} - {legendData.max}
-        </Typography>
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          width: "150px"
+        }}>
+          <div style={{
+            background: `linear-gradient(to right, ${gradientColors.join(",")})`,
+            height: "20px",
+            width: "100%"
+          }}></div>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontSize: "14px"
+          }}>
+            <span>{legendData.min}</span>
+            <span>{legendData.max}</span>
+          </div>
+        </div>
       </div>
     );
   };
@@ -177,11 +199,34 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     <div style={{ position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height: "65vh" }} />
       {loading && (
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)"
+        }}>
           <CircularProgress />
         </div>
       )}
-      {createLegend()} {/* Legende mit Farbverlauf anzeigen */}
+      {createLegend()}
+      {hoverCount !== null && (
+        <div
+
+          style={{
+            position: "absolute",
+            top: "10px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "10px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            boxShadow: "0 0 5px rgba(0,0,0,0.2)",
+            zIndex: 1000,
+          }}
+        >
+          <Typography variant="h6">Anzahl Sichtungen: {hoverCount}</Typography>
+        </div>
+      )}
     </div>
   );
 };

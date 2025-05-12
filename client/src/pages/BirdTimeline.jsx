@@ -10,9 +10,9 @@ import {
   ReferenceArea,
 } from "recharts";
 
-export default function VogelZeitstrahl({ birdIds, range, setRange }) {
+export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, endDate }) {
   const [data, setData] = useState([]);
-  const [minMax, setMinMax] = useState([range[0], range[1]]);
+
 
   const [tempRange, setTempRange] = useState([range[0].getTime(), range[1].getTime()]);
 
@@ -30,7 +30,7 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
 
     const url = `http://localhost:8000/getObservationsTimeline/?speciesids=${birdIds.join(
       ","
-    )}&date_from=${range[0].toISOString()}&date_to=${range[1].toISOString()}`;
+    )}&date_from=${startDate.toISOString()}&date_to=${endDate.toISOString()}`;
 
     fetch(url)
       .then((response) => {
@@ -48,12 +48,6 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
 
         setData(formatted);
 
-        if (formatted.length > 0) {
-          const minDate = formatted[0].date;
-          const maxDate = formatted[formatted.length - 1].date;
-          setMinMax([minDate, maxDate]);
-          setRange([minDate, maxDate]);
-        }
       })
       .catch((error) => console.error("Fetch-Fehler:", error));
   }, [birdIds]);
@@ -71,7 +65,7 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
               dataKey="timestamp"
               tickFormatter={(d) => new Date(d).toLocaleDateString()}
               type="number"
-              domain={[range[0].getTime(), range[1].getTime()]}
+              domain={[startDate.getTime(),endDate.getTime()]}
               scale="time"
             />
             <YAxis />
@@ -93,8 +87,8 @@ export default function VogelZeitstrahl({ birdIds, range, setRange }) {
             value={tempRange}
             onChange={handleChange}
             onChangeCommitted={handleChangeCommitted}
-            min={minMax[0].getTime()}
-            max={minMax[1].getTime()}
+            min={startDate.getTime()}
+            max={endDate.getTime()}
             step={24 * 60 * 60 * 1000}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => new Date(value).toLocaleDateString()}

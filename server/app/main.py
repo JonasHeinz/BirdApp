@@ -124,20 +124,25 @@ class GeoJsonRequest(BaseModel):
     familiesIds: Optional[List[int]] = []
     date_from: str
     date_to: str
-    grid: str = "grid5"
-    bbox: Optional[List[float]] = []
+
 
 @app.post("/getGeojson/")
 def get_geojson(request: GeoJsonRequest):
+    response = {}
 
-   
-    grid_gdf = grid1 if request.grid == "grid1" else grid5
-   
+    # Wenn keine Filter gesetzt sind → leere Grids zurückgeben
+    if not request.speciesids and not request.familiesIds:
+        response["grid1"] = grid1[["geometry"]].copy()
+        response["grid1"]["count"] = 0
+        response["grid1"] = response["grid1"][0:0].to_json()  # komplett leer
 
-    if request.grid == "grid1": 
-        grid_gdf = grid_gdf[grid_gdf.intersects(box(request.bbox[0], request.bbox[1], request.bbox[2], request.bbox[3]))]
+        response["grid5"] = grid5[["geometry"]].copy()
+        response["grid5"]["count"] = 0
+        response["grid5"] = response["grid5"][0:0].to_json()
 
+        return JSONResponse(content=response)
 
+    # Andernfalls SQL zusammenbauen
     where_clause = []
     params = []
 
@@ -151,11 +156,7 @@ def get_geojson(request: GeoJsonRequest):
         where_clause.append(f"s.family_id IN ({placeholders})")
         params.extend(request.familiesIds)
 
-    if not where_clause:
-        return JSONResponse(content={"grid": grid_gdf[["geometry"]].to_json()})
-
     where_sql = " OR ".join(where_clause)
-    
     sql = f"""
         SELECT o.*
         FROM observations o
@@ -171,13 +172,22 @@ def get_geojson(request: GeoJsonRequest):
     finally:
         db_pool.putconn(conn)
 
+    # Wenn keine Sichtungen → Geometrien ohne Zählung zurückgeben
     if sightings.empty:
-        return JSONResponse(content={"grid": grid_gdf[["geometry"]].to_json()})
+        response["grid1"] = grid1[["geometry"]].to_json()
+        response["grid5"] = grid5[["geometry"]].to_json()
+        return JSONResponse(content=response)
 
-    joined = gpd.sjoin(grid_gdf, sightings, how="left", predicate="contains")
-    grouped_counts = joined.groupby("id")["observationid"].agg("count")
-    joined["count"] = grouped_counts.fillna(0).astype(int)
+    def count_points_per_cell(grid, sightings):
+        if "id" not in grid.columns:
+            grid["id"] = grid.index
+        joined = gpd.sjoin(grid, sightings, how="inner", predicate="contains")
+        counts = joined.groupby("id").size().rename("count").reset_index()
+        grid = grid.merge(counts, on="id", how="left")
+        grid["count"] = grid["count"].fillna(0).astype(int)
+        return grid[grid["count"] > 0][["geometry", "count"]]
 
-    filtered = joined[joined["count"] > 0][["count", "geometry"]]
+    response["grid1"] = count_points_per_cell(grid1, sightings).to_json()
+    response["grid5"] = count_points_per_cell(grid5, sightings).to_json()
 
-    return JSONResponse(content={"grid": filtered.to_json()})
+    return JSONResponse(content=response)
