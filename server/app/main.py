@@ -191,3 +191,40 @@ def get_geojson(request: GeoJsonRequest):
     response["grid5"] = count_points_per_cell(grid5, sightings).to_json()
 
     return JSONResponse(content=response)
+
+
+
+@app.get("/getHoehenDiagramm")
+def getHoehenDiagramm(species: str):
+    conn = db_pool.getconn()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT speciesid FROM species WHERE latinname = %s", (species,))
+            result = cursor.fetchone()
+            if not result:
+                return JSONResponse(content={"error": "Art nicht gefunden"}, status_code=404)
+            speciesid = result[0]
+
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT
+                    CONCAT(
+                        FLOOR(ST_Z(geom) / 500) * 500,
+                        '-',
+                        FLOOR(ST_Z(geom) / 500) * 500 + 499
+                    ) AS elevation_label,
+                    COUNT(*) AS count
+                FROM observations
+                WHERE ST_Z(geom) IS NOT NULL
+                    AND speciesid = %s
+                GROUP BY FLOOR(ST_Z(geom) / 500)
+                ORDER BY FLOOR(ST_Z(geom) / 500)
+            """, (speciesid,))
+            rows = cursor.fetchall()
+
+        data = [{"elevation": row[0], "count": row[1]} for row in rows]
+
+    finally:
+        db_pool.putconn(conn)
+
+    return JSONResponse(content=data)
