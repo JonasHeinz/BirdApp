@@ -3,7 +3,7 @@
 Willkommen bei **BirdApp**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz – direkt von der [Ornitho API](https://www.ornitho.ch).  
 ➡️ Ideal für Vogelfreunde, Forschende und Datenanalyst:innen.
 
-[📺 Demovideo ansehen](https://your-demo-link.com)  
+[📺 Demovideo ansehen](https://www.youtube.com/watch?v=dQw4w9WgXcQ)  
 [📘 Zur API-Dokumentation ](https://www.ornitho.ch/index.php?m_id=43)
 
 ---
