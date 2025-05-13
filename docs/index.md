@@ -1,14 +1,3 @@
-<!-- # GDI Projekt
-
-Das ist die Projekt Website des _GDI Projekts_. Das GDI enthält eine Server und eine Client Umgebung.
-
-- Server: FastAPI
-- Client: React + OpenLayers
-
-GitHub Repository: [https://github.com/314a/GDI_Project](https://github.com/314a/GDI_Project)
-
-![GDI Projekt Screenshot](screenshot.png) -->
-
 # 🐦 BirdApp – Analyse und Visualisierung von Vogelbeobachtungen
 
 Willkommen bei **BirdApp**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz – direkt von der [Ornitho API](https://www.ornitho.ch).  
@@ -39,9 +28,9 @@ Vogelbeobachtungsdaten sind entscheidend für den Naturschutz und die Biodiversi
 ## 📖 Benutzerhandbuch
 
 1. 📅 Zeitraum wählen (z. B. letzte 3 Tage)
-2. 🗺️ Beobachtungspunkte auf der Karte betrachten
-3. 🐦 Auf Marker klicken → Details zur Art
-4. 🔍 Seltenheitsfilter oder gezielte Artauswahl nutzen
+2. 🗺️ Beobachtungsregionen auf der Karte betrachten
+3. 🐦 Auf Eintrag klicken → Details zur Art
+4. 🔍 Gezielte Art- oder Familienauswahl nutzen
 
 ![Beispiel Screenshot](assets/screenshot-map.png)
 
