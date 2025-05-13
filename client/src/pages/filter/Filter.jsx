@@ -74,7 +74,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
 
   return (
     <Stack spacing={2} sx={{ padding: 1 }}>
-      <Typography variant="h6">Vögel der karte hinzufügen:</Typography>
+      <Typography variant="h6">Vögel der Karte hinzufügen:</Typography>
       <Stack direction="row" spacing={1} alignItems="center">
  
         <FormControl sx={{ flex: 1 }}>
