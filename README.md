@@ -2,12 +2,14 @@
 
 Server Client Projekt für eine Geodateninfrastruktur Webportal im Rahmen des Moduls 4230
 
+ACHTUNG: Das Projekt läuft nur mit der nicht öffentlichen REST API von [Ornitho.ch](https://www.ornitho.ch)!
+
 - **Frontend:** React.js, OpenLayers und MUI
 - **Backend:** FastAPI, GeoServer
 
 GitHub Pages: https://jonasheinz.github.io/BirdApp/
 
-Getestet mit Node version 22.14.0, openlayers 9.1.0, maplibre 5.1.0, react 18.3.1
+Getestet mit Node version 22.14.0, openlayers 9.1.0, react 18.3.1
 
 ## Requirements
 
@@ -18,22 +20,22 @@ Getestet mit Node version 22.14.0, openlayers 9.1.0, maplibre 5.1.0, react 18.3.
 
 ## Repository lokal klonen
 
-Mit Git in einem Terminal das GitHub Repository _Geoharvester_ in ein lokales Verzeichnis klonen.
+Mit Git in einem Terminal das GitHub Repository in ein lokales Verzeichnis klonen.
 
 ```shell
 cd /path/to/workspace
 # Clone Repository
-git clone https://github.com/JonasHeinz/BirdApp.git
+git clone https://github.com/JonasHeinz/BirdApp
 ```
 
 ### Git Projekt mit Visual Studio Code lokal klonen
 
-Öffne ein neues Visual Studio Code Fenster und wähle unter Start _Clone Git Repository_. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (_View / Command Palette_) und wähle `Git: clone`.
-Füge die Git web URL `https://github.com/JonasHeinz/BirdApp.git` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository _geklont_ werden soll.
+Öffne ein neues Visual Studio Code Fenster und wähle unter Start *Clone Git Repository*. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (_View / Command Palette_) und wähle `Git: clone`.
+Füge die Git web URL `https://github.com/JonasHeinz/BirdApp` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository *geklont* werden soll.
 
 ## Frontend installieren
 
-Öffne ein Terminal (Command Prompt in VS Code) und wechsle in den _client_ Ordner in diesem Projekt
+Öffne ein Terminal (Command Prompt in VS Code) und wechsle in den *client* Ordner in diesem Projekt
 
 ```shell
 cd client
@@ -48,7 +50,7 @@ npm run dev
 
 ## Backend installieren
 
-Öffne ein Terminal und wechsle in den _server_ Ordner.
+Öffne ein Terminal und wechsle in den *server* Ordner.
 
 1. Virtuelle Umgebung für Python mit allen Requirements in der `requirements.txt` Datei aufsetzen.
 
@@ -61,7 +63,7 @@ conda config --add channels conda-forge
 conda create --name gdiproject python=3.10.9 --file app/requirements.txt
 ```
 
-2. Backend ausführen, virtuelle Umgebung starten und server _uvicorn_ starten. Öffne http://localhost:8000/docs im Browser und verifiziere, ob das Backend läuft.
+2. Backend ausführen, virtuelle Umgebung starten und server *uvicorn* starten. Öffne http://localhost:8000/docs im Browser und verifiziere, ob das Backend läuft.
 
 ```shell
 cd server
@@ -71,6 +73,10 @@ conda activate gdiproject
 uvicorn app.main:app --reload
 # Öffne die angegebene URL im Browser und verifiziere, ob das Backend läuft.
 ```
+
+## API Dokumentation
+
+Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server läuft, kann auf die Dokumentation der API über Swagger UI auf http://localhost:8000/docs verfügbar.
 
 ## Ordnerstruktur
 
@@ -83,13 +89,10 @@ uvicorn app.main:app --reload
 ├── .env # Lokale Konfiguration (nicht im Git)
 ├── README.md
 
-## API Dokumentation
-
-Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server läuft, kann auf die Dokumentation der API über Swagger UI auf http://localhost:8000/docs verfügbar.
 
 ## API-Zugang
 
-Als erstes brauchst du einen persönlichen API Zugang, welchen du bei Ornitho.ch anfragen kannst. Sobald du diesen hast, kannst du ihn im nächsten Schritt im Projekt ergänzen.
+Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [Ornitho.ch](https://www.ornitho.ch) anfragen kannst. Sobald du diesen hast, kannst du ihn im nächsten Schritt im Projekt ergänzen.
 
 ## .env File
 
@@ -100,7 +103,7 @@ OAUTH_CONSUMER_KEY=abc123
 OAUTH_CONSUMER_SECRET=xyz456
 DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 
-## Datenbank
+## Datenbank erstellen
 
 Für das Speichern der durch die API abgefragten Daten wird eine Datenbank benötigt. Diese kann ganz einfach in einem Datenbank Programm (z.B. pgAdmin) aufgesetzt werden.
 
@@ -162,14 +165,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS observations_unique
 
 ```
 
-## Abfüllen der Datenbank
+## Datenbank abfüllen
 
-Unter server -> scripts hat es eine Datei mit dem Namen updateDb.py.
+``` shell
+# Unter server -> scripts hat es eine Datei mit dem Namen updateDb.py.
+cd scripts
+# Datenbank aufsetzen oder aktualisieren
+# Dies lädt dir alle Daten (Family, Species und Observations) der letzen 365 Tage in die Datenbank (dies wird lange dauern).
+python updateDb.py
+```
 
-Solltest du, gegen unsere Empfelung, oben andere Parameter gewählt haben kannst du diese hier auf den Zeilen 35-39 anpassen.
-Dieses File können sie in der Konsole ausführen in dem sie zuerst zu Pfad wo die App sich befindet navigieren (z.B. C:\Users\alexa\BirdApp\server\scripts>) und dann den Import mit dem folgenden Befehl ausführen: python updateDb.py
-Dies lädt dir alle Daten (Family, Species und Observations) der Letzen 365 Tage in die Datenbank (dies wird lange dauern).
+Solltest du, gegen unsere Empfehlung, oben andere Parameter gewählt haben kannst du diese hier auf den Zeilen 35-39 anpassen.
 
-## Jetzt sollte alles startklar sein und du kannst die App starten und vollkommen nutzen.
 
-# Bei Fragen oder Problemen melde dich beim Team oder poste ein Issue auf GitHub
+## Jetzt sollte alles startklar sein und du kannst die App starten und nutzen.
+
+## Bei Fragen oder Problemen melde dich beim Team oder poste ein Issue auf GitHub
