@@ -13,16 +13,40 @@ In unserem Team haben wir eine Web-App entwickelt, die es Vogelliebhabern ermög
 
 ## Funktionalitäten
 
-![Beispiel Screenshot](assets/all.png)
  
-- Interaktive Karte, die Vogel-Sichtungen in einem Raster aggregiert darstellt.
-- Filtermöglichkeiten nach Vogelart und Vogelfamilie.
-- Detailansicht zu einem Vogel mit Bild, Kurzbeschreibung und Statistiken nach Höhe und Bodenbedeckungsart.
-- Ein Liniendiagramm visualisiert die Verteilung der Sichtungen über die einzelnen Monate. Über ein auswählbares Zeitfenster können gezielt nur die Daten eines bestimmten Zeitraums angezeigt werden.
+**Interaktive Karte, die Vogel-Sichtungen in einem Raster aggregiert darstellt.**
 
-![Beispiel Screenshot](assets/Screenshot_App.jpg)
+![Beispiel Screenshot](assets/all.png)
 
----
+**Filtermöglichkeiten nach Vogelart und Vogelfamilie**
+
+Alle Vögel welche sich in der Tabelle befinden werden in der Karte dargestellt. Vögel können mithilfe des Multiauswahl-Suchsfeld und des Plus Knopfes hinzugefügt werden. Dabei kann man einzelne Vogelarten oder ganze Vogelfamilien auswählen. Diese lassen sich natürlich mit dem Mülleimer wieder entfernen.
+
+![Beispiel Screenshot](assets/Filter.png)
+
+**Zeitraumauswahl**
+
+Mithilfe des Sliders lässt sich der Zeitraum bestimmen für welchen man Informationen über Vogelvorkommen erhalten will. Ausserdem kann man anhand des Liniendiagramms erkennen wann mehr oder weniger Vögel gesichtet wurden.
+
+![Beispiel Screenshot](assets/Timeline.png)
+
+**Karte**
+
+Auf der Karte werden die Vogelsichtung in einem Raster dargestellt. Anhand der Farbintensität kann man erkennen wo viele und wo wenig gesichtet wurden. Wenn man sich auf einer niedrigen Zoomstufe befindet bekommt man mit einem 5km Raster eine grobe Übersicht der Vorkommen über die ganze Schweiz verteilt. Bei einer niedrigeren Zoomstufe bekommt man  mit einem 1km Raster genauere Positionsinformationen. Es kann ausserdem auch die Hintergrundkarte geändert werden.
+
+![Beispiel Screenshot](assets/zoom.png)
+
+**Vogelinfos**
+
+Hier wird ein Bild und eine kurze Beschreibung des Vogels von Wikipedia dargestellt. Bei gösserem Interesse wird man über einen Link zu Wikipedia geleitet.
+Ausserdem kann man sich Statistiken über die Anzahl Sichtungen nach Höhe und nach Bodenbedeckung anzeigen lassen.
+
+<p float="left">
+  <img src="assets/Info.png" width="33%" />
+  <img src="assets/Höhe.png" width="33%" />
+  <img src="assets/Bedeckung.png" width="33%" />
+</p>
+
 
 ## Verwendete Technologien & Methoden
 
