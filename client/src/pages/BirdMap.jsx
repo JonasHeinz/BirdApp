@@ -4,7 +4,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { XYZ, Vector as VectorSource } from "ol/source";
-import { Fill, Style } from "ol/style";
+import { Fill, Style, Stroke } from "ol/style";
 import { GeoJSON } from "ol/format";
 import chroma from "chroma-js";
 import { CircularProgress, Typography } from "@mui/material";
@@ -18,16 +18,19 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   const [loading, setLoading] = useState(false);
   const [legendData, setLegendData] = useState(null);
   const [hoverCount, setHoverCount] = useState(null);
+  const [activeBasemap, setActiveBasemap] = useState("lightgray");
+  const baseLayersRef = useRef({});
 
   useEffect(() => {
-    const baseLayer = new TileLayer({
-      source: new XYZ({
-        url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-        attributions: "&copy; CartoDB",
-        maxZoom: 19,
-      }),
-    });
+    const layers = baseLayersRef.current;
+    if (!layers) return;
 
+    Object.entries(layers).forEach(([key, layer]) => {
+      layer.setVisible(key === activeBasemap);
+    });
+  }, [activeBasemap]);
+
+  useEffect(() => {
     const view = new View({
       projection: "EPSG:3857",
       center: [924000, 6000000],
@@ -39,10 +42,37 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
 
     const map = new Map({
       target: mapRef.current,
-      layers: [baseLayer],
+      layers: [],
       view,
       controls: [new ScaleLine({ units: "metric" })],
     });
+    const baseLayers = {
+      lightgray: new TileLayer({
+        source: new XYZ({
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+          attributions: "&copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+          maxZoom: 19,
+        }),
+        visible: true,
+      }),
+      osm: new TileLayer({
+        source: new XYZ({
+          url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+          attributions: "&copy; OpenStreetMap contributors",
+        }),
+        visible: false,
+      }),
+      satellite: new TileLayer({
+        source: new XYZ({
+          url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          attributions: "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS",
+          maxZoom: 19,
+        }),
+        visible: false,
+      }),
+    };
+    Object.values(baseLayers).forEach((layer) => map.addLayer(layer));
+    baseLayersRef.current = baseLayers;
 
     map.on("pointermove", (event) => {
       const feature = map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
@@ -129,7 +159,10 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
                     .alpha(0.8)
                     .css(), // 70% Deckkraft
                 }),
-                stroke: null, // keine Umrandung
+                stroke: new Stroke({
+                  color: "rgba(80, 80, 80, 0.5)", // Dunkelgrauer Rand mit 50 % Deckkraft
+                  width: 1, // 1px dicker Rand
+                }),
               });
             },
           });
@@ -208,7 +241,6 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   };
 
   return (
-    
     <div style={{ position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height: "70vh" }} />
       {loading && (
@@ -238,9 +270,30 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
             zIndex: 1000,
           }}
         >
-          <Typography variant="h6">Anzahl Sichtungen: {hoverCount}</Typography>
+          <Typography variant="h6">Anzahl Sichtungen {hoverCount}</Typography>
         </div>
       )}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "10px",
+          right: "10px",
+          backgroundColor: "white",
+          padding: "10px",
+          borderRadius: "8px",
+          boxShadow: "0 0 5px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+        }}
+      >
+        <Typography variant="body1" style={{ marginBottom: "8px" }}>
+          Hintergrundkarte:
+        </Typography>
+        <select value={activeBasemap} onChange={(e) => setActiveBasemap(e.target.value)}>
+          <option value="lightgray">Light Gray</option>
+          <option value="osm">OpenStreetMap</option>
+          <option value="satellite">Satellite</option>
+        </select>
+      </div>
     </div>
   );
 };

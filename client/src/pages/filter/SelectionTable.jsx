@@ -32,9 +32,9 @@ export default function BirdTable({ birds, setBirds }) {
         <Table stickyHeader >
           <TableHead >
             <TableRow >
-              <TableCell  sx={{ backgroundColor: "#2e7d32", color: "white" }}><b>Vogelart</b></TableCell>
-              <TableCell  sx={{  backgroundColor: "#2e7d32", color: "white" }}><b>Seltenheit</b></TableCell>
-              <TableCell align="right"  sx={{  backgroundColor: "#2e7d32", color: "white" }}><b>Alle Löschen:</b><IconButton onClick={() => handleDeleteAll()} sx={{ padding: 0, color: "error.main" }}>
+              <TableCell  sx={{ backgroundColor: "#eaeaea" }}><b>Vogelart</b></TableCell>
+              <TableCell  sx={{  backgroundColor: "#eaeaea"}}><b>Seltenheit</b></TableCell>
+              <TableCell align="right"  sx={{  backgroundColor: "#eaeaea"}}><b>Alle Löschen:</b><IconButton onClick={() => handleDeleteAll()} sx={{ padding: 0, color: "error.main" }}>
                     <DeleteIcon />
                   </IconButton></TableCell>
             </TableRow>
