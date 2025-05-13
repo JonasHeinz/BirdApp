@@ -115,7 +115,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
         const min = Math.min(...allCounts);
         const max = Math.max(...allCounts);
 
-        const scale = chroma.scale("blues").domain([Math.log10(min || 0), Math.log10(max || 0)]);
+        const scale = chroma.scale("greens").domain([Math.log10(min || 0), Math.log10(max || 0)]);
 
         const createLayer = (features, visible) => {
           return new VectorLayer({
@@ -126,7 +126,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
               return new Style({
                 fill: new Fill({
                   color: scale(Math.log10(count || 0))
-                    .alpha(0.7)
+                    .alpha(0.8)
                     .css(), // 70% Deckkraft
                 }),
                 stroke: null, // keine Umrandung
@@ -176,13 +176,13 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
           boxShadow: "0 0 5px rgba(0,0,0,0.2)",
         }}
       >
-        <Typography variant="h6">Legende</Typography>
+        <Typography variant="h6">Anzahl Sichtungen</Typography>
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             gap: "8px",
-            width: "150px",
+            width: "175px",
           }}
         >
           <div
@@ -210,7 +210,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   return (
     
     <div style={{ position: "relative" }}>
-      <div ref={mapRef} style={{ width: "100%", height: "65vh" }} />
+      <div ref={mapRef} style={{ width: "100%", height: "70vh" }} />
       {loading && (
         <div
           style={{

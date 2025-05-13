@@ -74,7 +74,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
 
   return (
     <Stack spacing={2} sx={{ padding: 1 }}>
-      <Typography variant="h6">Vögel der karte hinzufügen:</Typography>
+      <Typography variant="h6">Vögel der Karte hinzufügen:</Typography>
       <Stack direction="row" spacing={1} alignItems="center">
  
         <FormControl sx={{ flex: 1 }}>
@@ -108,7 +108,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
           disabled={selectedSpecies.length === 0}
           color="primary"
           variant="contained" // kein Hintergrund, nur Icon
-          sx={{ minWidth: 0, padding: 1 }} // kompakt wie IconButton
+          sx={{ minWidth: 0, padding: 1 , backgroundColor: "#2e7d32"}} // kompakt wie IconButton
         >
           <AddIcon />
         </Button>
@@ -147,7 +147,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
           disabled={selectedFamilies.length === 0}
           color="primary"
           variant="contained" // kein Hintergrund, nur Icon
-          sx={{ minWidth: 0, padding: 1 }} // kompakt wie IconButton
+          sx={{ minWidth: 0, padding: 1 , backgroundColor: "#2e7d32"}} // kompakt wie IconButton
         >
           <AddIcon />
         </Button>

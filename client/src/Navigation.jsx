@@ -36,8 +36,10 @@ function Navigation({birds, setBirds, families, setFamilies}) {
             flexShrink: 0,
             [`& .MuiDrawer-paper`]: {
               width: drawerWidth,
+              backgroundColor: "#2e7d32",
               boxSizing: "border-box",
               transition: "width 0.3s",
+             
             },
           }}
         >
@@ -48,7 +50,7 @@ function Navigation({birds, setBirds, families, setFamilies}) {
                 component={NavLink}
                 to="/filter"
                 sx={{
-                  "&.active": { backgroundColor: "#e0f7fa" },
+                  "&.active": { backgroundColor: "#5c805e" },
                   justifyContent: "center",
                 }}
               >
@@ -61,7 +63,7 @@ function Navigation({birds, setBirds, families, setFamilies}) {
                 component={NavLink}
                 to="/image"
                 sx={{
-                  "&.active": { backgroundColor: "#e0f7fa" },
+                  "&.active": { backgroundColor: "#5c805e" },
                   justifyContent: "center",
                 }}
               >
@@ -81,8 +83,9 @@ function Navigation({birds, setBirds, families, setFamilies}) {
             flexGrow: 1,
             marginLeft: open ? `${drawerWidth}px` : 0,
             transition: "margin-left 0.3s",
-            width: "40vw",
+            width: "35vw",
             height: "100%",
+            padding: 1,
           }}
         >
           <Stack direction="row">

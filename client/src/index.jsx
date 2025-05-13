@@ -18,11 +18,11 @@ function App() {
   const [range, setRange] = useState([startDate, endDate]);
 
   useEffect(() => {
-    setBirds([{ speciesid: "386", germanname: "Rotkehlchen", latinname: "Erithacus rubecula" }]);
+    setBirds([{ speciesid: "386", germanname: "Rotkehlchen", latinname: "Erithacus rubecula", rarity: "verycommon" }]);
   }, []);
 
   return (
-    <Stack direction="row">
+    <Stack direction="row" >
       <Navigation birds={birds} setBirds={setBirds} families={families} setFamilies={setFamilies} />
       <Stack direction="column"  maxHeight={"100vh"} width="100%">
           <Birdmap birdIds={birdIds} range={range} familiesIds={familiesIds} /> 

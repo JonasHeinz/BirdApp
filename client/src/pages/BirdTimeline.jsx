@@ -10,9 +10,8 @@ import {
   ReferenceArea,
 } from "recharts";
 
-export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, endDate }) {
+export default function VogelZeitstrahl({ birdIds, range, setRange, startDate, endDate }) {
   const [data, setData] = useState([]);
-
 
   const [tempRange, setTempRange] = useState([range[0].getTime(), range[1].getTime()]);
 
@@ -47,16 +46,13 @@ export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, en
           .sort((a, b) => a.timestamp - b.timestamp);
 
         setData(formatted);
-
       })
       .catch((error) => console.error("Fetch-Fehler:", error));
   }, [birdIds]);
 
   return (
     <Box p={2}>
-      <Typography variant="h6" gutterBottom>
-        Sichtungen im gewählten Zeitraum
-      </Typography>
+      <Typography variant="h6">Zeitraum auswählen:</Typography>
 
       <Box height={"20vh"} position="relative">
         <ResponsiveContainer width="100%" height="100%">
@@ -65,7 +61,7 @@ export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, en
               dataKey="timestamp"
               tickFormatter={(d) => new Date(d).toLocaleDateString()}
               type="number"
-              domain={[startDate.getTime(),endDate.getTime()]}
+              domain={[startDate.getTime(), endDate.getTime()]}
               scale="time"
             />
             <YAxis />
@@ -83,6 +79,21 @@ export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, en
 
         <Box position="absolute" bottom={16} left={65} right={5}>
           <Slider
+            sx={{
+              color: "#2e7d32", // Farbe des Tracks und Thumbs
+              "& .MuiSlider-thumb": {
+                backgroundColor: "#2e7d32", // Farbe des Thumbs (der Schieberegler)
+                "&:hover": {
+                  backgroundColor: "#388e3c", // Hover-Farbe für den Thumb
+                },
+              },
+              "& .MuiSlider-rail": {
+                backgroundColor: "#bdbdbd", // Farbe des inaktiven Tracks
+              },
+              "& .MuiSlider-track": {
+                backgroundColor: "#2e7d32", // Farbe des aktiven Tracks
+              },
+            }}
             size="small"
             value={tempRange}
             onChange={handleChange}
@@ -92,7 +103,6 @@ export default function VogelZeitstrahl({ birdIds, range, setRange,startDate, en
             step={24 * 60 * 60 * 1000}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => new Date(value).toLocaleDateString()}
-       
           />
         </Box>
       </Box>

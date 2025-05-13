@@ -8,11 +8,13 @@ import {
   TableBody,
   IconButton,
   TableContainer,
-  Paper
+  Paper,
+  Chip,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router";
+import { getRarity } from "../../../public/rarityData";
 
 export default function BirdTable({ birds, setBirds }) {
   const navigate = useNavigate();
@@ -20,32 +22,46 @@ export default function BirdTable({ birds, setBirds }) {
   const handleDelete = (id) => {
     setBirds(birds.filter((b) => b.speciesid !== id));
   };
+  const handleDeleteAll = () => {
+    setBirds([]);
+  };
 
   return (
-    <Paper sx={{ height: "100%", overflow: "hidden" }}>
+    <Paper sx={{ height: "100%", overflow: "hidden", backgroundColor: "#eaeaea" }}>
       <TableContainer sx={{ maxHeight: "70vh" }}>
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Vogelart</TableCell>
-              <TableCell align="right">Aktionen</TableCell>
+        <Table stickyHeader >
+          <TableHead >
+            <TableRow >
+              <TableCell  sx={{ backgroundColor: "#2e7d32", color: "white" }}><b>Vogelart</b></TableCell>
+              <TableCell  sx={{  backgroundColor: "#2e7d32", color: "white" }}><b>Seltenheit</b></TableCell>
+              <TableCell align="right"  sx={{  backgroundColor: "#2e7d32", color: "white" }}><b>Alle Löschen:</b><IconButton onClick={() => handleDeleteAll()} sx={{ padding: 0, color: "error.main" }}>
+                    <DeleteIcon />
+                  </IconButton></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {birds.map((bird) => (
-              <TableRow key={bird.speciesid} >
-                <TableCell>{bird.germanname}</TableCell>
-                <TableCell align="right">
+              <TableRow key={bird.speciesid}>
+                <TableCell>
+                  {" "}
                   <IconButton
-                    sx={{ padding: 0 }}
+                    sx={{ padding: 0, paddingRight: 2, color: "black" }}
                     aria-label="Mehr Infos"
-                    onClick={() =>
-                      navigate(`/image/${encodeURIComponent(bird.latinname)}`)
-                    }
+                    onClick={() => navigate(`/image/${encodeURIComponent(bird.latinname)}`)}
                   >
                     <VisibilityIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(bird.speciesid)}sx={{ padding: 0 }}>
+                  {bird.germanname}
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    sx={{ backgroundColor: getRarity(bird.rarity).color }}
+                    label={getRarity(bird.rarity).name}
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton onClick={() => handleDelete(bird.speciesid)} sx={{ padding: 0, color: "error.main" }}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
