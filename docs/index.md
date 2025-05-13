@@ -4,7 +4,7 @@ Willkommen bei **BirdApp**, einer interaktiven Webanwendung zur Darstellung und 
 ➡️ Ideal für Vogelfreunde, Forschende und Datenanalyst:innen.
 
 [📺 Demovideo ansehen](https://your-demo-link.com)  
-[📘 Zur API-Dokumentation (Swagger)](http://localhost:8000/docs)
+[📘 Zur API-Dokumentation ](https://www.ornitho.ch/index.php?m_id=43)
 
 ---
 
@@ -32,7 +32,7 @@ Vogelbeobachtungsdaten sind entscheidend für den Naturschutz und die Biodiversi
 3. 🐦 Auf Eintrag klicken → Details zur Art
 4. 🔍 Gezielte Art- oder Familienauswahl nutzen
 
-![Beispiel Screenshot](assets/screenshot-map.png)
+![Beispiel Screenshot](assets/screenshot_App.jpg)
 
 ---
 
@@ -47,7 +47,7 @@ Vogelbeobachtungsdaten sind entscheidend für den Naturschutz und die Biodiversi
 | Analyse    | Raum-Zeit-Filter, Raritätsbewertung       |
 | Deployment | Vercel (Frontend), lokale FastAPI-Instanz |
 
-Weitere technische Details und Setup-Anleitung findest du im [📘 README](https://github.com/deinuser/BirdApp/blob/main/README.md).
+Weitere technische Details und Setup-Anleitung findest du im [📘 README](https://github.com/jonasheinz/BirdApp/blob/main/README.md).
 
 ---
 
