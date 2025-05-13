@@ -91,7 +91,7 @@ Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server 
 
 ## API-Zugang
 
-Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [Ornitho.ch](https://www.ornitho.ch) anfragen kannst. Sobald du diesen hast, kannst du ihn im nächsten Schritt im Projekt ergänzen.
+Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [ornitho.ch](https://www.ornitho.ch) anfragen kannst. Sobald du diesen hast, kannst du ihn im nächsten Schritt im Projekt ergänzen.
 
 ## .env File
 
@@ -179,4 +179,4 @@ Solltest du, gegen unsere Empfehlung, oben andere Parameter gewählt haben kanns
 
 ## Jetzt sollte alles startklar sein und du kannst die App starten und nutzen.
 
-## Bei Fragen oder Problemen melde dich beim Team oder poste ein Issue auf GitHub
+### Bei Fragen oder Problemen melde dich beim Team oder poste ein Issue auf GitHub
