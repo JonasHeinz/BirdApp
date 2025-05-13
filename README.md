@@ -80,14 +80,16 @@ Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server 
 
 ## Ordnerstruktur
 
-📁 BIRDAPP  
-├── client/              # React Frontend  
-├── docs/                # Github Pages  
-├── server/              # FastAPI Backend  
-│   ├── app/             # Python Code  
-│   └── scripts/         # updateDB.py etc.  
-├── .env                 # Lokale Konfiguration (nicht im Git)  
+```
+📁 BIRDAPP
+├── client/           # React Frontend
+├── docs/             # GitHub Pages
+├── server/           # FastAPI Backend
+│   ├── app/          # Python Code
+│   └── scripts/      # updateDB.py etc.
+├── .env              # Lokale Konfiguration (nicht im Git)
 └── README.md
+```
 
 ## API-Zugang
 
