@@ -44,3 +44,7 @@ Weitere technische Details und Setup-Anleitung findest du im [README](https://gi
 - PostgreSQL mit PostGIS
 - GeoServer (optional)
 - .env mit API-Zugangsdaten
+
+## Quellen
+
+- 
