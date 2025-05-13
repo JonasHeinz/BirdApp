@@ -12,6 +12,8 @@ In unserem Team haben wir eine Web-App entwickelt, die es Vogelliebhabern ermög
 ---
 
 ## Funktionalitäten
+
+![Beispiel Screenshot](assets/all.png)
  
 - Interaktive Karte, die Vogel-Sichtungen in einem Raster aggregiert darstellt.
 - Filtermöglichkeiten nach Vogelart und Vogelfamilie.
