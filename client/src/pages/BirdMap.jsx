@@ -33,7 +33,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   useEffect(() => {
     const view = new View({
       projection: "EPSG:3857",
-      center: [924000, 6000000],
+      center: [914000, 5900000],
       zoom: 7,
       maxZoom: 12,
       minZoom: 6,
