@@ -1,42 +1,28 @@
-# 🐦 Vogelradar – Analyse und Visualisierung von Vogelbeobachtungen
+# Vogelradar – Analyse und Visualisierung von Vogelbeobachtungen
 
-Willkommen bei **Vogelradar**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz – direkt von der [Ornitho API](https://www.ornitho.ch).  
-➡️ Ideal für Vogelfreunde, Forschende und Datenanalyst:innen.
+Willkommen bei **Vogelradar**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz.  
 
-[📺 Demovideo ansehen](https://www.youtube.com/watch?v=dQw4w9WgXcQ)  
-[📘 Zur API-Dokumentation ](https://www.ornitho.ch/index.php?m_id=43)
+In unserem Team haben wir eine Web-App entwickelt, die Vogelliebhabern ermöglicht, sich über verschiedene Vogelarten und ihre Sichtungsgebiete zu informieren. Dabei legen wir besonderen Wert auf den Schutz seltener Arten: Die Standortdaten werden bewusst so dargestellt, dass keine genauen Koordinaten preisgegeben werden – um die Tiere nicht zu gefährden, aber dennoch wertvolle Informationen bereitzustellen.
 
----
+[Demovideo ansehen](https://www.youtube.com/watch?v=dQw4w9WgXcQ) 
 
-## 🎯 Motivation
-
-Vogelbeobachtungsdaten sind entscheidend für den Naturschutz und die Biodiversitätsforschung. Unser Ziel war es, diese Daten visuell, intuitiv und explorativ zugänglich zu machen – mit Fokus auf Benutzerfreundlichkeit und räumlich-zeitliche Analyse.
+## Datengrundlage
+[Ornitho.ch](https://www.ornitho.ch) ist eine Online-Plattform zur Erfassung und Dokumentation von Vogelbeobachtungen. Die Daten stammen aus Crowdsourcing – also von einer grossen Gemeinschaft freiwilliger Vogelbeobachterinnen und -beobachter, die ihre Sichtungen laufend eintragen. Dadurch entsteht eine wertvolle, kontinuierlich wachsende Datengrundlage zur Vogelwelt in der Schweiz. Ornitho stellt zudem eine nicht öffentliche API bereit, die wir als Datengrundlage für unsere Anwendung genutzt haben. 
 
 ---
 
-## 🚀 Features
+## Funktionalitäten
+ 
+- Interaktive Karte, die Vogel-Sichtungen in einem Raster aggregiert darstellt.
+- Filtermöglichkeiten nach Vogelart und Vogelfamilie
+- Detailansicht zu einem Vogel mit Bild, Kurzbeschreibung und Statistiken nach Höhe und Bodenbedeckungsart.
+- Ein Liniendiagramm visualisiert die Verteilung der Sichtungen über die einzelnen Monate. Über ein auswählbares Zeitfenster können gezielt nur die Daten eines bestimmten Zeitraums angezeigt werden.
 
-- 🗺️ **Interaktive Karte** mit aktuellen Vogelbeobachtungen
-- 🐦 **Detaillierte Artinformationen** (Name, Seltenheitsgrad, Familie)
-- 📅 **Zeitfilter** zur Eingrenzung von Beobachtungszeitpunkten
-- 🧭 **Räumliche Analyse** (z. B. seltene Arten pro Region)
-- 🔐 **Authentifizierte API-Anbindung** via OAuth
-- 📤 **Automatisierte Datenbank-Synchronisation** über Cronjobs/Scripts
-
----
-
-## 📖 Benutzerhandbuch
-
-1. 📅 Zeitraum wählen (z. B. letzte 3 Tage)
-2. 🗺️ Beobachtungsregionen auf der Karte betrachten
-3. 🐦 Auf Eintrag klicken → Details zur Art
-4. 🔍 Gezielte Art- oder Familienauswahl nutzen
-
-![Beispiel Screenshot](assets/screenshot_App.jpg)
+![Beispiel Screenshot](assets/Screenshot_App.jpg)
 
 ---
 
-## 🧪 Verwendete Technologien & Methoden
+## Verwendete Technologien & Methoden
 
 | Komponente | Technologie / Methode                     |
 | ---------- | ----------------------------------------- |
@@ -47,28 +33,14 @@ Vogelbeobachtungsdaten sind entscheidend für den Naturschutz und die Biodiversi
 | Analyse    | Raum-Zeit-Filter, Raritätsbewertung       |
 | Deployment | Vercel (Frontend), lokale FastAPI-Instanz |
 
-Weitere technische Details und Setup-Anleitung findest du im [📘 README](https://github.com/jonasheinz/BirdApp/blob/main/README.md).
+Weitere technische Details und Setup-Anleitung findest du im [README](https://github.com/jonasheinz/BirdApp/blob/main/README.md).
 
 ---
 
-## 🔧 Installation & Setup
-
-Voraussetzungen:
+## Voraussetzungen:
 
 - Python 3.10+
 - Node.js 18+
 - PostgreSQL mit PostGIS
 - GeoServer (optional)
 - .env mit API-Zugangsdaten
-
-```bash
-# Backend starten
-cd server
-pip install -r requirements.txt
-uvicorn main:app --reload
-
-# Frontend starten
-cd client
-npm install
-npm run dev
-```
