@@ -2,7 +2,7 @@
 
 Server Client Projekt für eine Geodateninfrastruktur Webportal im Rahmen des Moduls 4230
 
-ACHTUNG: Das Projekt läuft nur mit der nicht öffentlichen REST API von [Ornitho.ch](https://www.ornitho.ch)!
+⚠️ **ACHTUNG:** Das Projekt läuft nur mit der **nicht öffentlichen REST API** von [ornitho.ch](https://www.ornitho.ch)!
 
 - **Frontend:** React.js, OpenLayers und MUI
 - **Backend:** FastAPI, GeoServer
@@ -96,10 +96,10 @@ Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [Ornitho.c
 ## .env File
 
 Um mit der API zu arbeiten brauchst du noch ein zusätzliches File das du einfach .env nennen kannst. Im .env File musst du deine E-Mail, Passwort, API Key, API Secret ergänzen z.B. so  
-USER_EMAIL=deine@email.ch
-USER_PW=deinPasswort
-OAUTH_CONSUMER_KEY=abc123
-OAUTH_CONSUMER_SECRET=xyz456
+USER_EMAIL=deine@email.ch  
+USER_PW=deinPasswort  
+OAUTH_CONSUMER_KEY=abc123  
+OAUTH_CONSUMER_SECRET=xyz456  
 DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 
 ## Datenbank erstellen
@@ -107,11 +107,11 @@ DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 Für das Speichern der durch die API abgefragten Daten wird eine Datenbank benötigt. Diese kann ganz einfach in einem Datenbank Programm (z.B. pgAdmin) aufgesetzt werden.
 
 TIPP: Setze eine Datenbank auf mit folgenden Parametern:  
-DBName = BirdApp
-User = postgres
-Password = deinDbPasswort (dies noch im .env File ergänzen)
-Host = localhost
-Port = 5433
+DBName = BirdApp  
+User = postgres  
+Password = deinDbPasswort (dies noch im .env File ergänzen)  
+Host = localhost  
+Port = 5433  
 Wenn du diese Parameter verwendest, musst du anschliessend keine weiteren Anpassungen vornehmen.
 
 ## Erstellen der Tabellen in pgAdmin mit SQL Code
