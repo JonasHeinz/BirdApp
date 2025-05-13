@@ -98,11 +98,14 @@ Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [ornitho.c
 ## .env File
 
 Um mit der API zu arbeiten brauchst du noch ein zusätzliches File das du einfach .env nennen kannst. Im .env File musst du deine E-Mail, Passwort, API Key, API Secret ergänzen z.B. so  
+
+```
 USER_EMAIL=deine@email.ch  
 USER_PW=deinPasswort  
 OAUTH_CONSUMER_KEY=abc123  
 OAUTH_CONSUMER_SECRET=xyz456  
 DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
+```
 
 ## Datenbank erstellen
 
