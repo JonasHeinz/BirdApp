@@ -1,4 +1,4 @@
-# BirdApp
+# Vogelradar
 
 Server Client Projekt für eine Geodateninfrastruktur Webportal im Rahmen des Moduls 4230
 
@@ -23,13 +23,13 @@ Mit Git in einem Terminal das GitHub Repository _Geoharvester_ in ein lokales Ve
 ```shell
 cd /path/to/workspace
 # Clone Repository
-git clone https://github.com/314a/GDI_Project.git
+git clone https://github.com/JonasHeinz/BirdApp.git
 ```
 
 ### Git Projekt mit Visual Studio Code lokal klonen
 
 Öffne ein neues Visual Studio Code Fenster und wähle unter Start _Clone Git Repository_. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (_View / Command Palette_) und wähle `Git: clone`.
-Füge die Git web URL `https://github.com/314a/GDI_Project.git` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository _geklont_ werden soll.
+Füge die Git web URL `https://github.com/JonasHeinz/BirdApp.git` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository _geklont_ werden soll.
 
 ## Frontend installieren
 

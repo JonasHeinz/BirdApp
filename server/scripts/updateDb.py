@@ -92,7 +92,7 @@ def get_families():
         
             insert_families(
                 familyid=i.get("id"),
-                latin_name=i.get("latin_name"),
+                latin_name=i.get("latin_name").replace("(", "").replace(")", ""),
             )
             
 def insert_families(familyid, latin_name):

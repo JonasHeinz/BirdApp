@@ -1,6 +1,6 @@
-# 🐦 BirdApp – Analyse und Visualisierung von Vogelbeobachtungen
+# 🐦 Vogelradar – Analyse und Visualisierung von Vogelbeobachtungen
 
-Willkommen bei **BirdApp**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz – direkt von der [Ornitho API](https://www.ornitho.ch).  
+Willkommen bei **Vogelradar**, einer interaktiven Webanwendung zur Darstellung und Analyse von Vogelbeobachtungsdaten aus der Schweiz – direkt von der [Ornitho API](https://www.ornitho.ch).  
 ➡️ Ideal für Vogelfreunde, Forschende und Datenanalyst:innen.
 
 [📺 Demovideo ansehen](https://www.youtube.com/watch?v=dQw4w9WgXcQ)  
