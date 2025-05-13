@@ -80,15 +80,14 @@ Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server 
 
 ## Ordnerstruktur
 
-📁 BIRDAPP
-├── client/ # React Frontend
-├── docs/ # Github Pages
-├── server/ # FastAPI Backend
-│ ├── app/ # Python Code
-│ └── scripts/ # updateDB.py etc.
-├── .env # Lokale Konfiguration (nicht im Git)
-├── README.md
-
+📁 BIRDAPP  
+├── client/              # React Frontend  
+├── docs/                # Github Pages  
+├── server/              # FastAPI Backend  
+│   ├── app/             # Python Code  
+│   └── scripts/         # updateDB.py etc.  
+├── .env                 # Lokale Konfiguration (nicht im Git)  
+└── README.md
 
 ## API-Zugang
 
@@ -96,7 +95,7 @@ Als erstes brauchst du einen persönlichen API Zugang, welchen du bei [Ornitho.c
 
 ## .env File
 
-Um mit der API zu arbeiten brauchst du noch ein zusätzliches File das du einfach .env nennen kannst. Im .env File musst du deine E-Mail, Passwort, API Key, API Secret ergänzen z.B. so
+Um mit der API zu arbeiten brauchst du noch ein zusätzliches File das du einfach .env nennen kannst. Im .env File musst du deine E-Mail, Passwort, API Key, API Secret ergänzen z.B. so  
 USER_EMAIL=deine@email.ch
 USER_PW=deinPasswort
 OAUTH_CONSUMER_KEY=abc123
@@ -107,7 +106,7 @@ DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 
 Für das Speichern der durch die API abgefragten Daten wird eine Datenbank benötigt. Diese kann ganz einfach in einem Datenbank Programm (z.B. pgAdmin) aufgesetzt werden.
 
-TIPP: Setze eine Datenbank auf mit folgenden Parametern:
+TIPP: Setze eine Datenbank auf mit folgenden Parametern:  
 DBName = BirdApp
 User = postgres
 Password = deinDbPasswort (dies noch im .env File ergänzen)
