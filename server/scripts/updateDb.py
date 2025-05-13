@@ -137,7 +137,7 @@ def getObservations():
         # Try the request up to 3 times
         for attempt in range(3):
             try:
-                response = oauth_session.get(url)
+                response = oauth_session.get(url, timeout=15)
                 if response.status_code == 200:
                     break
                 logging.warning(f"Attempt {attempt+1}: API returned {response.status_code}")
@@ -205,6 +205,6 @@ def insert_observation(isozeit, speciesid, x, y, z):
 
 
 
-get_families()
-get_species()
-getObservations()
+# get_families()
+# get_species()
+# getObservations()
