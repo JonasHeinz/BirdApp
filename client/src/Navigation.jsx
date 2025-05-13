@@ -81,7 +81,7 @@ function Navigation({birds, setBirds, families, setFamilies}) {
             flexGrow: 1,
             marginLeft: open ? `${drawerWidth}px` : 0,
             transition: "margin-left 0.3s",
-            width: "30vw",
+            width: "40vw",
             height: "100%",
           }}
         >

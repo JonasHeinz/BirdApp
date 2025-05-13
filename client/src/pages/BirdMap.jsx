@@ -4,7 +4,7 @@ import Map from "ol/Map";
 import View from "ol/View";
 import { Tile as TileLayer, Vector as VectorLayer } from "ol/layer";
 import { XYZ, Vector as VectorSource } from "ol/source";
-import { Fill, Stroke, Style } from "ol/style";
+import { Fill, Style } from "ol/style";
 import { GeoJSON } from "ol/format";
 import chroma from "chroma-js";
 import { CircularProgress, Typography } from "@mui/material";
@@ -22,7 +22,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   useEffect(() => {
     const baseLayer = new TileLayer({
       source: new XYZ({
-        url: "https://cartodb-basemaps-{a-c}.global.ssl.fastly.net/light_nolabels/{z}/{x}/{y}.png",
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
         attributions: "&copy; CartoDB",
         maxZoom: 19,
       }),
@@ -124,8 +124,12 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
             style: (feature) => {
               const count = feature.get("count") || 0;
               return new Style({
-                fill: new Fill({ color: scale(Math.log10(count || 0)).css() }),
-                stroke: new Stroke({ color: "#333", width: 1 }),
+                fill: new Fill({
+                  color: scale(Math.log10(count || 0))
+                    .alpha(0.7)
+                    .css(), // 70% Deckkraft
+                }),
+                stroke: null, // keine Umrandung
               });
             },
           });
@@ -160,33 +164,41 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     const gradientColors = legendData.scale.colors(6); // Mehr Farben = glatter Verlauf
 
     return (
-      <div style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        padding: "10px",
-        zIndex: 1000,
-        backgroundColor: "white",
-        borderRadius: "8px",
-        boxShadow: "0 0 5px rgba(0,0,0,0.2)"
-      }}>
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          padding: "10px",
+          zIndex: 1000,
+          backgroundColor: "white",
+          borderRadius: "8px",
+          boxShadow: "0 0 5px rgba(0,0,0,0.2)",
+        }}
+      >
         <Typography variant="h6">Legende</Typography>
-        <div style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-          width: "150px"
-        }}>
-          <div style={{
-            background: `linear-gradient(to right, ${gradientColors.join(",")})`,
-            height: "20px",
-            width: "100%"
-          }}></div>
-          <div style={{
+        <div
+          style={{
             display: "flex",
-            justifyContent: "space-between",
-            fontSize: "14px"
-          }}>
+            flexDirection: "column",
+            gap: "8px",
+            width: "150px",
+          }}
+        >
+          <div
+            style={{
+              background: `linear-gradient(to right, ${gradientColors.join(",")})`,
+              height: "20px",
+              width: "100%",
+            }}
+          ></div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: "14px",
+            }}
+          >
             <span>{legendData.min}</span>
             <span>{legendData.max}</span>
           </div>
@@ -196,22 +208,24 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
   };
 
   return (
+    
     <div style={{ position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height: "65vh" }} />
       {loading && (
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)"
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
           <CircularProgress />
         </div>
       )}
       {createLegend()}
       {hoverCount !== null && (
         <div
-
           style={{
             position: "absolute",
             top: "10px",

@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { TextField, Box, Link, Typography, Autocomplete } from "@mui/material";
+import { useState, useEffect } from "react";
+import {
+  CircularProgress,
+  TextField,
+  Box,
+  Link,
+  Typography,
+  Autocomplete,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { useParams } from "react-router";
 import ElevationChart from "../diagramm/Hoehen";
+import LandCoverage from "../diagramm/LandCoverage";
 
 function Image() {
   const { latinName: routeLatinName } = useParams();
@@ -10,119 +20,133 @@ function Image() {
   const [summary, setSummary] = useState(null);
   const [wikiUrl, setWikiUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [deName, setDeName] = useState(null);
   const [speciesData, setSpeciesData] = useState([]);
+  const [view, setView] = useState("info");
 
-  // Daten abrufen
+  const handleViewChange = (event, newView) => {
+    if (newView !== null) {
+      setView(newView);
+    }
+  };
+
+  // Lade alle verfügbaren Arten
   useEffect(() => {
     fetch("http://localhost:8000/getSpecies/")
       .then((res) => res.json())
-      .then((data) => setSpeciesData(data));
+      .then(setSpeciesData)
+      .catch((err) => console.error("Fehler beim Laden der Arten:", err));
   }, []);
 
-  const fetchImageAndText = (selectedLatinName) => {
+  // Lade Bild und Text parallel
+  const fetchImageAndText = async (selectedLatinName) => {
     if (!selectedLatinName.trim()) return;
+
     setLoading(true);
+    setImageUrl(null);
+    setSummary(null);
+    setWikiUrl(null);
 
-    // Bild
-    fetch(`http://localhost:8000/getImage/?species=${encodeURIComponent(selectedLatinName)}`)
-      .then((res) => res.json())
-      .then((data) => setImageUrl(data.image_url))
-      .catch((err) => {
-        console.error("Fehler beim Laden des Bildes:", err);
-        setImageUrl(null);
-      });
+    try {
+      const [imageRes, textRes] = await Promise.all([
+        fetch(`http://localhost:8000/getImage/?species=${encodeURIComponent(selectedLatinName)}`),
+        fetch(`http://localhost:8000/getText/?species=${encodeURIComponent(selectedLatinName)}`),
+      ]);
 
-    // Text
-    fetch(`http://localhost:8000/getText/?species=${encodeURIComponent(selectedLatinName)}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSummary(data.summary);
-        setWikiUrl(data.url);
-        setLoading(false);
-        setDeName(data.de_name);
-      })
-      .catch((err) => {
-        console.error("Fehler beim Laden des Textes:", err);
-        setSummary(null);
-        setWikiUrl(null);
-        setLoading(false);
-      });
+      const imageData = await imageRes.json();
+      const textData = await textRes.json();
+
+      setImageUrl(imageData.image_url);
+      setSummary(textData.summary);
+      setWikiUrl(textData.url);
+    } catch (err) {
+      console.error("Fehler beim Laden der Inhalte:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // Falls URL-Param vorhanden ist
   useEffect(() => {
     if (routeLatinName) {
       fetchImageAndText(routeLatinName);
     }
   }, [routeLatinName]);
 
-  // Funktion, um den Text auf eine bestimmte Anzahl von Sätzen zu kürzen
-  const truncateTextBySentence = (text, maxSentences) => {
-    if (!text) return "";
-    const sentences = text.match(/[^.!?]+[.!?]/g)?.slice(0, maxSentences) || [];
-    return sentences.join(" ").trim();
-  };
-  
-
   return (
-    <Box sx={{ p: 1, textAlign: "center" }}>
-      <Box sx={{ display: "flex", justifyContent: "left", alignItems: "center", gap: 2 }}>
-        <Autocomplete
-          options={speciesData}
-          getOptionLabel={(option) => `${option.germanname} (${option.latinname})`}
-          value={speciesData.find((s) => s.latinname === latinName) || null}
-          onChange={(e, newValue) => {
-            const selectedLatin = newValue?.latinname || "";
-            setLatinName(selectedLatin);
-            fetchImageAndText(selectedLatin);
-          }}
-          filterOptions={(options, state) => {
-            const query = state.inputValue.toLowerCase();
-            return options.filter(
-              (option) =>
-                option.germanname.toLowerCase().includes(query) ||
-                option.latinname.toLowerCase().includes(query) 
-            );
-          }}
-          renderInput={(params) => (
-            <TextField {...params} label="Vogelart auswählen" variant="outlined" size="small" />
-          )}
-          sx={{ width: 308, justifyContent: "center", alignItems: "center" }}
-        />
-      </Box>
+    <Box sx={{ p: 2 }}>
+      {/* Autocomplete Auswahlfeld */}
+      <Autocomplete
+        options={speciesData}
+        getOptionLabel={(option) => `${option.germanname} (${option.latinname})`}
+        value={speciesData.find((s) => s.latinname === latinName) || null}
+        onChange={(e, newValue) => {
+          const selectedLatin = newValue?.latinname || "";
+          setLatinName(selectedLatin);
+          fetchImageAndText(selectedLatin);
+        }}
+        filterOptions={(options, state) => {
+          const query = state.inputValue.toLowerCase();
+          return options.filter(
+            (option) =>
+              option.germanname.toLowerCase().includes(query) ||
+              option.latinname.toLowerCase().includes(query)
+          );
+        }}
+        renderInput={(params) => (
+          <TextField {...params} label="Vogelart auswählen" variant="outlined" size="small" />
+        )}
+        sx={{ width: "100%" }}
+      />
 
-      {(deName || latinName) && (
-        <Typography variant="h6" sx={{ color: "black" }}>
-          {deName} {`(${latinName})`}
-        </Typography>
-      )}
-
-      <Box
-        sx={{ mt: 4, display: "flex", justifyContent: "center", alignItems: "flex-start", gap: 4 }}
-      >
-        {loading ? (
-          <p>Lade...</p>
-        ) : (
-          <>
-            {imageUrl && (
-              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <img
-                  src={imageUrl}
-                  alt={latinName}
-                  style={{
-                    maxWidth: "200px",
-                    maxHeight: "200px",
-                    objectFit: "cover",
-                  }}
-                />
-                <Box sx={{ mt: 1 }}>
-                  <Typography
-                    variant="body3"
-                    sx={{ wordBreak: "break-word", whiteSpace: "normal" }}
-                  >
+      {/* Ladeanimation oder Inhalt */}
+      {loading ? (
+        <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <Box sx={{ mt: 2 }}>
+          
+              {summary && (
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={handleViewChange}
+            aria-label="Diagrammwahl"
+            sx={{ mb: 2 }}
+          >
+            <ToggleButton value="info" aria-label="Info">
+              Info
+            </ToggleButton>
+            <ToggleButton value="elevation" aria-label="Höhen">
+              Höhe
+            </ToggleButton>
+            <ToggleButton value="landcover" aria-label="Landbedeckung">
+              Bedeckung
+            </ToggleButton>
+          </ToggleButtonGroup>
+              )}
+          {view === "info" && (
+            <Box
+              sx={{
+                mt: 2,
+                display: "flex",
+                justifyContent: "center",
+                gap: 4,
+                alignItems: "flex-start",
+                flexWrap: "wrap",
+              }}
+            >
+              {imageUrl && (
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <img
+                    src={imageUrl}
+                    alt={latinName}
+                    style={{ maxHeight: "200px", objectFit: "cover" }}
+                  />
+                  <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
                     <Link
                       href={imageUrl}
-                      sx={{ color: "black", fontSize: "12px" }}
+                      sx={{ color: "black", fontSize: "9px" }}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -130,58 +154,57 @@ function Image() {
                     </Link>
                   </Typography>
                 </Box>
-              </Box>
-            )}
-            {summary && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  textAlign: "justify",
-                  maxWidth: "500px",
-                }}
-              >
-                <Typography
-                  variant="body3"
-                  sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word" }}
+              )}
+
+              {summary && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    textAlign: "justify",
+                    maxWidth: 500,
+                  }}
                 >
-                  {summary}
-                </Typography>
-                {wikiUrl && (
-                  <Link
-                    href={wikiUrl}
-                    sx={{ color: "black", fontSize: "12px" }}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 1, hyphens: "auto", wordBreak: "break-word" }}
                   >
-                    Zur Wikipedia-Seite
-                  </Link>
-                )}
-              </Box>
-            )}
-            {!imageUrl && !summary && <p>Keine Daten gefunden</p>} 
-            {!imageUrl && !summary && <Typography
-  variant="body2"
-  sx={{
-    mt: 1,
-    textAlign: "left",  
-    typography: "body2"
-  }}
->
-  Suche einen Vogel, um Informationen zu erhalten.
-</Typography >}
-          </>
-        )}
-      </Box>
-      {latinName && (
-        <Box sx={{ mt: 4, ml: -4 }}>
-        <Typography sx= {{ mb: 5, ml: 1 }} variant="h6">Vogelsichtungen nach Höhe</Typography>
-        <ElevationChart latinName={latinName} />
+                    {summary}
+                  </Typography>
+                  {wikiUrl && (
+                    <Link
+                      href={wikiUrl}
+                      sx={{ color: "black", fontSize: "12px" }}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Zur Wikipedia-Seite
+                    </Link>
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Höhen-Diagramm */}
+          {view === "elevation" && (
+            <>
+              <Typography variant="h6">Vogelsichtungen nach Höhe</Typography>
+              <ElevationChart latinName={latinName} />
+            </>
+          )}
+
+          {/* Landbedeckungs-Diagramm */}
+          {view === "landcover" && (
+            <>
+              <Typography variant="h6">Vogelsichtungen nach Bodenbedeckung</Typography>
+              <LandCoverage latinName={latinName} />
+            </>
+          )}
         </Box>
-        )}
+      )}
     </Box>
-    
   );
 }
 

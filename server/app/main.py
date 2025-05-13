@@ -1,3 +1,5 @@
+from pydantic import BaseModel
+from typing import List, Optional
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -46,6 +48,7 @@ db_pool = pool.SimpleConnectionPool(
 grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
 grid1 = gpd.read_file("data/km_Grid_1_wgs84.geojson")
 
+
 def execute_query(query, params=None):
     conn = None
     try:
@@ -56,14 +59,17 @@ def execute_query(query, params=None):
         return cur.fetchall()
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
     finally:
         if conn:
             db_pool.putconn(conn)
 
+
 @app.get("/")
 async def root():
     return {"message": "Hello GDI Project"}
+
 
 @app.get("/about/")
 def about():
@@ -81,13 +87,16 @@ def about():
         """
     )
 
+
 @app.get("/getSpecies/")
 async def get_species():
     return execute_query("SELECT * FROM species")
 
+
 @app.get("/getFamilies/")
 async def get_families():
     return execute_query("SELECT * FROM family")
+
 
 @app.get("/getObservationsTimeline/")
 async def get_observations_timeline(date_from: str, date_to: str, speciesids: str):
@@ -105,19 +114,18 @@ async def get_observations_timeline(date_from: str, date_to: str, speciesids: st
     params = [date_from, date_to] + speciesid_list
     return execute_query(sql, params)
 
+
 @app.get("/getImage/")
 def get_image(species: str):
     image_url = get_image_for_species(species)
     return JSONResponse(content={"image_url": image_url})
+
 
 @app.get("/getText/")
 def get_text(species: str):
     text_data = get_wikipedia_summary(species)
     return JSONResponse(content=text_data)
 
-
-from typing import List, Optional
-from pydantic import BaseModel
 
 class GeoJsonRequest(BaseModel):
     speciesids: Optional[List[int]] = []
@@ -193,13 +201,13 @@ def get_geojson(request: GeoJsonRequest):
     return JSONResponse(content=response)
 
 
-
 @app.get("/getHoehenDiagramm")
 def getHoehenDiagramm(species: str):
     conn = db_pool.getconn()
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT speciesid FROM species WHERE latinname = %s", (species,))
+            cursor.execute(
+                "SELECT speciesid FROM species WHERE latinname = %s", (species,))
             result = cursor.fetchone()
             if not result:
                 return JSONResponse(content={"error": "Art nicht gefunden"}, status_code=404)
@@ -228,3 +236,61 @@ def getHoehenDiagramm(species: str):
         db_pool.putconn(conn)
 
     return JSONResponse(content=data)
+
+from fastapi.responses import JSONResponse
+
+# Dein coverageData als Liste von Dicts
+COVERAGE_DATA = [
+    { "key": "Wald", "area": 52684999335, "color": "#228B22" },
+    { "key": "Siedl", "area": 12415664072, "color": "#B22222" },
+    { "key": "Fels", "area": 11219618167, "color": "#A9A9A9" },
+    { "key": "Geroell", "area": 5798093164, "color": "#C2B280" },
+    { "key": "See", "area": 3152735554, "color": "#1E90FF" },
+    { "key": "Gletscher", "area": 1465452334, "color": "#ADD8E6" },
+    { "key": "Reben", "area": 1020036687, "color": "#8FBC8F" },
+    { "key": "Obstanlage", "area": 659101737, "color": "#9ACD32" },
+    { "key": "Sumpf", "area": 651564781.7, "color": "#556B2F" },
+    { "key": "Stausee", "area": 269901064, "color": "#4682B4" },
+    { "key": "Stadtzentr", "area": 25154699.39, "color": "#800000" }
+]
+
+@app.get("/getLandcover/")
+def get_landcover_timeline(latinName: Optional[str] = None):
+    conn = db_pool.getconn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            params = []
+            species_filter = ""
+
+            if latinName:
+                names = [name.strip() for name in latinName.split(",")]
+                placeholders = ",".join(["%s"] * len(names))
+                species_filter = f"AND s.latinname IN ({placeholders})"
+                params.extend(names)
+
+            cursor.execute(f"""
+                SELECT 
+                    o.landcover,
+                    COUNT(*) AS count
+                FROM observations o
+                JOIN species s ON o.speciesid = s.speciesid
+                WHERE o.landcover IS NOT NULL
+                    {species_filter}
+                GROUP BY o.landcover
+            """, params)
+
+            db_counts = {row["landcover"]: row["count"] for row in cursor.fetchall()}
+
+            # Kombiniere mit COVERAGE_DATA
+            merged = []
+            for entry in COVERAGE_DATA:
+                key = entry["key"]
+                merged.append({
+                    **entry,
+                    "count": db_counts.get(key, 0)
+                })
+
+            return JSONResponse(content=merged)
+
+    finally:
+        db_pool.putconn(conn)

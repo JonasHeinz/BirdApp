@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip  } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const ElevationChart = ({ latinName }) => {
+const LandCoverage = ({ latinName }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -10,14 +10,13 @@ const ElevationChart = ({ latinName }) => {
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/getHoehenDiagramm?species=${encodeURIComponent(latinName)}`
+          `http://localhost:8000/getLandcover?latinName=${encodeURIComponent(latinName)}`
         );
         const responseData = await response.json();
-        const formatted = responseData.map((item) => ({
-          elevation: item.elevation,
-          count: item.count,
-        }));
-        setData(formatted);
+
+    
+
+        setData(responseData);
       } catch (error) {
         console.error("Fehler beim Laden der Diagrammdaten:", error);
       }
@@ -34,21 +33,21 @@ const ElevationChart = ({ latinName }) => {
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 70 }}>
         <XAxis
-          type="category"
-          dataKey="elevation"
+          dataKey="key" // <-- hier statt "landcover"
           stroke="black"
+          angle={-45}
+          textAnchor="end"
+          interval={0}
           label={{
-            value: "Höhe (m)",
+            value: "Bodenbedeckung",
             position: "insideBottom",
-            offset: -18,
+            offset: -60,
             fill: "black",
           }}
         />
-
         <YAxis
-          type="number"
           stroke="black"
           label={{
             value: "Sichtungen",
@@ -60,10 +59,15 @@ const ElevationChart = ({ latinName }) => {
           }}
         />
         <Tooltip />
-        <Bar dataKey="count" fill="#81c784" barSize={55} />
+        <Bar dataKey="count" label={{ position: "top" }}>
+          {data.map((entry, index) => {
+            console.log(entry.color); // Überprüfe den Farbwert
+            return <Cell key={`cell-${index}`} fill={entry.color} />;
+          })}
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 };
 
-export default ElevationChart;
+export default LandCoverage;
