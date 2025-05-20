@@ -78,16 +78,29 @@ uvicorn app.main:app --reload
 
 Fast API kommt mit vorinstallierter Swagger UI. Wenn der Fast API Backen Server läuft, kann auf die Dokumentation der API über Swagger UI auf http://localhost:8000/docs verfügbar.
 
+Endpoints:
+```
+/getSpecies/                # Gibt die Daten von der Datenbanktabelle der Vogelarten zurück.                   
+/getFamilies/               # Gibt die Daten von der Datenbanktabelle der Familien zurück.
+/getObservationsTimeline/   # Gibt für einen angegebenen Zeitraum und eine Liste von Vogelarten (über ihre IDs) die Anzahl der Beobachtungen pro Tag zurück.       
+/getImage/                  # Gibt das Foto von der Wikimedia Commons API zurück.
+/getText/                   # Gibt den ersten Absatz eines Wikipedia-Artikels zurück.  
+/getGeojson/                # 
+/getHoehenDiagramm/         # Gibt die Anzahl der Beobachtungen einer angegebenen Vogelart in 500-Meter-Höhenintervallen zurück.
+/getLandcover/              # Gibt die Verteilung der Beobachtung nach Bodensbedeckungsart zurück. 
+```
+
+
 ## Ordnerstruktur
 
 ```
 📁 BIRDAPP
-├── client/           # React Frontend
-├── docs/             # GitHub Pages
-├── server/           # FastAPI Backend
-│   ├── app/          # Python Code
-│   └── scripts/      # updateDB.py etc.
-├── .env              # Lokale Konfiguration (nicht im Git)
+├── client/                 # React Frontend
+├── docs/                   # GitHub Pages
+├── server/                 # FastAPI Backend
+│   ├── app/                # Python Code
+│   └── scripts/            # updateDB.py etc.
+├── .env                    # Lokale Konfiguration (nicht im Git)
 └── README.md
 ```
 

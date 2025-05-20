@@ -63,13 +63,20 @@ Weitere technische Details und Setup-Anleitung findest du im [README](https://gi
 
 ---
 
+## Architekturdiagramm
+
+![Beispiel Screenshot](assets/Architektur.png)
+
+---
+
 ## Voraussetzungen
 
 - Python 3.10+
 - Node.js 18+
 - PostgreSQL mit PostGIS
-- GeoServer (optional)
 - .env mit API-Zugangsdaten
+
+---
 
 ## Quellen
 
