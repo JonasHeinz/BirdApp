@@ -3,7 +3,7 @@ Willkommen bei **Vogelradar**, einer interaktiven Webanwendung zur Darstellung u
 In unserem Team haben wir eine Web-App entwickelt, die es Vogelliebhabern ermöglicht, sich über verschiedene Vogelarten und ihre Sichtungsgebiete zu informieren. Dabei legen wir besonderen Wert auf den Schutz seltener Arten: Die Standortdaten werden bewusst so dargestellt, dass keine genauen Koordinaten preisgegeben werden – um die Tiere nicht zu gefährden, aber dennoch wertvolle Informationen bereitzustellen.
 
 <video width="100%" controls>
-  <source src="assets/Demovogelradar.mp4" type="video/mp4">
+  <source src="assets/Demovideo.mp4" type="video/mp4">
 </video>
 ---
 
@@ -43,9 +43,9 @@ Hier wird ein Bild und eine kurze Beschreibung des Vogels von Wikipedia dargeste
 Ausserdem kann man sich Statistiken über die Anzahl Sichtungen nach Höhe und nach Bodenbedeckung anzeigen lassen.
 
 <p float="left">
-  <img src="assets/Info.png" style="width: 33%;" />
-  <img src="assets/Höhe.png" style="width: 33%;" />
-  <img src="assets/Bedeckung.png" style="width: 33%;" />
+  <img src="assets/Info.png" style="width: 30%;" />
+  <img src="assets/Höhe.png" style="width: 30%;" />
+  <img src="assets/Bedeckung.png" style="width: 30%;" />
 </p>
 
 ## Verwendete Technologien & Methoden
