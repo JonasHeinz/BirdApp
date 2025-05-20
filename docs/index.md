@@ -40,11 +40,16 @@ Hier wird ein Bild und eine kurze Beschreibung des Vogels von Wikipedia dargeste
 Ausserdem kann man sich Statistiken über die Anzahl Sichtungen nach Höhe und nach Bodenbedeckung anzeigen lassen.
 
 <p float="left">
-  <img src="assets/Info.png" />
-  <img src="assets/Höhe.png" />
-  <img src="assets/Bedeckung.png" />
+  <img src="assets/Info.png" style="width: 30%;" />
+  <img src="assets/Höhe.png" style="width: 30%;" />
+  <img src="assets/Bedeckung.png" style="width: 30%;" />
 </p>
 
+<div style="display: flex; gap: 10px;">
+  <img src="assets/Info.png" style="width: 30%;" />
+  <img src="assets/Höhe.png" style="width: 30%;" />
+  <img src="assets/Bedeckung.png" style="width: 30%;" />
+</div>
 
 ## Verwendete Technologien & Methoden
 
