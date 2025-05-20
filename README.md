@@ -177,6 +177,7 @@ cd scripts
 # Datenbank aufsetzen oder aktualisieren
 # Dies lädt dir alle Daten (Family, Species und Observations) der letzen 365 Tage in die Datenbank (dies wird lange dauern).
 python updateDb.py
+# Zur Nachverfolgung des Datenimports wird automatisch die Datei observation_import im Ordner server/scripts erstellt, welche alle übernommenen Einträge auflistet.
 ```
 
 Solltest du, gegen unsere Empfehlung, oben andere Parameter gewählt haben kannst du diese hier auf den Zeilen 35-39 anpassen.
