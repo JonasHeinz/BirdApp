@@ -1,15 +1,19 @@
 import json
 
+
 def convert_to_geojson(data):
     features = []
-    
+
     for sighting in data["data"]["sightings"]:
         for observer in sighting["observers"]:
             feature = {
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [float(observer["coord_lon"]), float(observer["coord_lat"])]
+                    "coordinates": [
+                        float(observer["coord_lon"]),
+                        float(observer["coord_lat"]),
+                    ],
                 },
                 "properties": {
                     "species_name": sighting["species"]["name"],
@@ -22,16 +26,11 @@ def convert_to_geojson(data):
                     "county": sighting["place"]["county"],
                     "altitude": sighting["place"]["altitude"],
                     "count": observer.get("count", "unknown"),
-                    "comment": observer.get("comment", "")
-                }
+                    "comment": observer.get("comment", ""),
+                },
             }
             features.append(feature)
-    
-    geojson = {
-        "type": "FeatureCollection",
-        "features": features
-    }
-    
+
+    geojson = {"type": "FeatureCollection", "features": features}
+
     return geojson
-
-

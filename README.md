@@ -30,7 +30,7 @@ git clone https://github.com/JonasHeinz/BirdApp
 
 ### Git Projekt mit Visual Studio Code lokal klonen
 
-Öffne ein neues Visual Studio Code Fenster und wähle unter Start *Clone Git Repository*. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (_View / Command Palette_) und wähle `Git: clone`.
+Öffne ein neues Visual Studio Code Fenster und wähle unter Start *Clone Git Repository*. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (*View / Command Palette*) und wähle `Git: clone`.
 Füge die Git web URL `https://github.com/JonasHeinz/BirdApp` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository *geklont* werden soll.
 
 ## Frontend installieren
