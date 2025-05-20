@@ -156,8 +156,8 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
               return new Style({
                 fill: new Fill({
                   color: scale(Math.log10(count || 0))
-                    .alpha(0.8)
-                    .css(), // 70% Deckkraft
+                    .alpha(0.5)
+                    .css(), 
                 }),
                 stroke: new Stroke({
                   color: "rgba(80, 80, 80, 0.5)", // Dunkelgrauer Rand mit 50 % Deckkraft

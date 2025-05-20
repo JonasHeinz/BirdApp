@@ -33,16 +33,19 @@ const ElevationChart = ({ latinName }) => {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data}>
+    <ResponsiveContainer width="100%" height={300} >
+      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 70 }}>
         <XAxis
           type="category"
+          angle={-45}
           dataKey="elevation"
           stroke="black"
+           textAnchor="end"
+          interval={0}
           label={{
             value: "Höhe (m)",
             position: "insideBottom",
-            offset: -18,
+            offset: -60,
             fill: "black",
           }}
         />

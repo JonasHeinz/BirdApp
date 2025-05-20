@@ -1,7 +1,6 @@
 
 # Datenbank Verbindung
 from psycopg2 import pool
-# from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
@@ -9,12 +8,16 @@ from authlib.integrations.requests_client import OAuth1Session
 import psycopg2
 from datetime import datetime, timedelta
 import logging
-# import {getRarity} from "....client/public/rarityData.js"
+import geopandas as gpd
+from shapely.geometry import Point
+import time
 import json
 
 with open("rarity.json") as f:
     rarity_levels = json.load(f)
 
+landcover_gdf = gpd.read_file("zip://../data/LandCoverage.zip")
+landcover_gdf = landcover_gdf.to_crs(epsg=4326) 
 
 # CORS Einstellungen
 # siehe: https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware
@@ -38,13 +41,15 @@ DB_PASSWD = os.getenv("DB_PASSWD")
 oauth_session = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
 conn = psycopg2.connect(
-    dbname="BirdApp2",     # Name deiner Datenbank
+    dbname="VogelRadar",     # Name deiner Datenbank
     user="postgres",        # Dein DB-Benutzername
     password=DB_PASSWD,  # Dein Passwort
     host="localhost",        # Oder z. B. "127.0.0.1"
     port="5433"              # Standardport für PostgreSQL
 )
 cur = conn.cursor()
+
+
 
 
 def get_species():
@@ -183,28 +188,36 @@ def getObservations():
         except Exception as e:
             logging.error(f"Error parsing JSON for range {date_from_str} to {date_to_str}: {e}")
 
+def get_landcover_value(lon, lat):
+    pt = Point(lon, lat)
+    matches = landcover_gdf[landcover_gdf.geometry.contains(pt)]
+    if not matches.empty:
+        return matches.iloc[0]["OBJVAL"] 
+    return None
 
 def insert_observation(isozeit, speciesid, x, y, z):
     try:
-        # Check if the species ID exists in the database before trying to insert the observation
+        # Check if the species ID exists
         cur.execute("SELECT 1 FROM public.species WHERE speciesid = %s", (speciesid,))
-        if not cur.fetchone():  # If species does not exist in DB, log it and return
+        if not cur.fetchone():
             logging.warning(f"Species ID {speciesid} not found in the database. Skipping observation.")
-            return  # Skip this observation, do not insert it
+            return
+
+        # Hole Landcover-Wert
+        landcover_value = get_landcover_value(float(x), float(y))
 
         sql = """
-        INSERT INTO public.observations (date, speciesid, geom)
-        VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s, %s, %s), 4326))
+        INSERT INTO public.observations (date, speciesid, geom, landcover)
+        VALUES (%s, %s, ST_SetSRID(ST_MakePoint(%s, %s, %s), 4326), %s)
         ON CONFLICT DO NOTHING
         """
-        cur.execute(sql, (isozeit, speciesid, x, y, z))
+        cur.execute(sql, (isozeit, speciesid, x, y, z, landcover_value))
         conn.commit()
-        logging.info(f"Inserted observation {isozeit} | SID {speciesid}")
+        logging.info(f"Inserted observation {isozeit} | SID {speciesid} | LC {landcover_value}")
     except Exception as e:
         logging.error(f"Database insert failed for {isozeit}, {speciesid}: {e}")
 
 
-
 # get_families()
 # get_species()
-# getObservations()
+getObservations()
