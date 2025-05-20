@@ -30,7 +30,7 @@ git clone https://github.com/JonasHeinz/BirdApp
 
 ### Git Projekt mit Visual Studio Code lokal klonen
 
-Öffne ein neues Visual Studio Code Fenster und wähle unter Start *Clone Git Repository*. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (_View / Command Palette_) und wähle `Git: clone`.
+Öffne ein neues Visual Studio Code Fenster und wähle unter Start *Clone Git Repository*. Alternativ öffne die Command Palette in VS Code `CTRL+Shift+P` (*View / Command Palette*) und wähle `Git: clone`.
 Füge die Git web URL `https://github.com/JonasHeinz/BirdApp` ein und bestätige die Eingabe mit Enter. Wähle einen Ordner in welchen das Repository *geklont* werden soll.
 
 ## Frontend installieren
@@ -112,8 +112,8 @@ DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 Für das Speichern der durch die API abgefragten Daten wird eine Datenbank benötigt. Diese kann ganz einfach in einem Datenbank Programm (z.B. pgAdmin) aufgesetzt werden.
 
 TIPP: Setze eine Datenbank auf mit folgenden Parametern:  
-DBName = BirdApp  
-User = postgres  
+Database = BirdApp  
+Owner = postgres  
 Password = deinDbPasswort (dies noch im .env File ergänzen)  
 Host = localhost  
 Port = 5433  

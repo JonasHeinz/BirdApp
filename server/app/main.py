@@ -20,7 +20,7 @@ origins = [
     "http://localhost",
     "http://localhost:8080",
     "http://localhost:3000",
-    "http://localhost:5173"
+    "http://localhost:5173",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +41,7 @@ db_pool = pool.SimpleConnectionPool(
     user="postgres",
     password=DB_PASSWD,
     host="localhost",
-    port="5433"
+    port="5433",
 )
 
 
@@ -60,7 +60,9 @@ def execute_query(query, params=None):
     except Exception as e:
         print(e)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error: {e}")
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e}",
+        )
     finally:
         if conn:
             db_pool.putconn(conn)
@@ -207,14 +209,18 @@ def getHoehenDiagramm(species: str):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT speciesid FROM species WHERE latinname = %s", (species,))
+                "SELECT speciesid FROM species WHERE latinname = %s", (species,)
+            )
             result = cursor.fetchone()
             if not result:
-                return JSONResponse(content={"error": "Art nicht gefunden"}, status_code=404)
+                return JSONResponse(
+                    content={"error": "Art nicht gefunden"}, status_code=404
+                )
             speciesid = result[0]
 
         with conn.cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT
                     CONCAT(
                         FLOOR(ST_Z(geom) / 500) * 500,
@@ -227,7 +233,9 @@ def getHoehenDiagramm(species: str):
                     AND speciesid = %s
                 GROUP BY FLOOR(ST_Z(geom) / 500)
                 ORDER BY FLOOR(ST_Z(geom) / 500)
-            """, (speciesid,))
+            """,
+                (speciesid,),
+            )
             rows = cursor.fetchall()
 
         data = [{"elevation": row[0], "count": row[1]} for row in rows]
@@ -237,22 +245,22 @@ def getHoehenDiagramm(species: str):
 
     return JSONResponse(content=data)
 
-from fastapi.responses import JSONResponse
 
 # Dein coverageData als Liste von Dicts
 COVERAGE_DATA = [
-    { "key": "Wald", "area": 52684999335, "color": "#228B22" },
-    { "key": "Siedl", "area": 12415664072, "color": "#B22222" },
-    { "key": "Fels", "area": 11219618167, "color": "#A9A9A9" },
-    { "key": "Geroell", "area": 5798093164, "color": "#C2B280" },
-    { "key": "See", "area": 3152735554, "color": "#1E90FF" },
-    { "key": "Gletscher", "area": 1465452334, "color": "#ADD8E6" },
-    { "key": "Reben", "area": 1020036687, "color": "#8FBC8F" },
-    { "key": "Obstanlage", "area": 659101737, "color": "#9ACD32" },
-    { "key": "Sumpf", "area": 651564781.7, "color": "#556B2F" },
-    { "key": "Stausee", "area": 269901064, "color": "#4682B4" },
-    { "key": "Stadtzentr", "area": 25154699.39, "color": "#800000" }
+    {"key": "Wald", "area": 52684999335, "color": "#228B22"},
+    {"key": "Siedl", "area": 12415664072, "color": "#B22222"},
+    {"key": "Fels", "area": 11219618167, "color": "#A9A9A9"},
+    {"key": "Geroell", "area": 5798093164, "color": "#C2B280"},
+    {"key": "See", "area": 3152735554, "color": "#1E90FF"},
+    {"key": "Gletscher", "area": 1465452334, "color": "#ADD8E6"},
+    {"key": "Reben", "area": 1020036687, "color": "#8FBC8F"},
+    {"key": "Obstanlage", "area": 659101737, "color": "#9ACD32"},
+    {"key": "Sumpf", "area": 651564781.7, "color": "#556B2F"},
+    {"key": "Stausee", "area": 269901064, "color": "#4682B4"},
+    {"key": "Stadtzentr", "area": 25154699.39, "color": "#800000"},
 ]
+
 
 @app.get("/getLandcover/")
 def get_landcover_timeline(latinName: Optional[str] = None):
@@ -268,7 +276,8 @@ def get_landcover_timeline(latinName: Optional[str] = None):
                 species_filter = f"AND s.latinname IN ({placeholders})"
                 params.extend(names)
 
-            cursor.execute(f"""
+            cursor.execute(
+                f"""
                 SELECT 
                     o.landcover,
                     COUNT(*) AS count
@@ -277,7 +286,9 @@ def get_landcover_timeline(latinName: Optional[str] = None):
                 WHERE o.landcover IS NOT NULL
                     {species_filter}
                 GROUP BY o.landcover
-            """, params)
+            """,
+                params,
+            )
 
             db_counts = {row["landcover"]: row["count"] for row in cursor.fetchall()}
 
@@ -285,10 +296,7 @@ def get_landcover_timeline(latinName: Optional[str] = None):
             merged = []
             for entry in COVERAGE_DATA:
                 key = entry["key"]
-                merged.append({
-                    **entry,
-                    "count": db_counts.get(key, 0)
-                })
+                merged.append({**entry, "count": db_counts.get(key, 0)})
 
             return JSONResponse(content=merged)
 
