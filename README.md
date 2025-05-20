@@ -112,8 +112,8 @@ DB_PASSWD=deinDbPasswort (Dies erstellen wir gleich im nächsten Schritt)
 Für das Speichern der durch die API abgefragten Daten wird eine Datenbank benötigt. Diese kann ganz einfach in einem Datenbank Programm (z.B. pgAdmin) aufgesetzt werden.
 
 TIPP: Setze eine Datenbank auf mit folgenden Parametern:  
-DBName = BirdApp  
-User = postgres  
+Database = BirdApp  
+Owner = postgres  
 Password = deinDbPasswort (dies noch im .env File ergänzen)  
 Host = localhost  
 Port = 5433  
