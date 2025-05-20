@@ -1,11 +1,9 @@
 # Vogelradar
 
-Server Client Projekt für eine Geodateninfrastruktur Webportal im Rahmen des Moduls 4230
-
 ⚠️ **ACHTUNG:** Das Projekt läuft nur mit der **nicht öffentlichen REST API** von [ornitho.ch](https://www.ornitho.ch)!
 
 - **Frontend:** React.js, OpenLayers und MUI
-- **Backend:** FastAPI, GeoServer
+- **Backend:** FastAPI 
 
 GitHub Pages: https://jonasheinz.github.io/BirdApp/
 
@@ -17,6 +15,8 @@ Getestet mit Node version 22.14.0, openlayers 9.1.0, react 18.3.1
 - IDE wie [Visual Studio Code](https://code.visualstudio.com/)
 - [Anaconda Distribution](https://www.anaconda.com/products/distribution) oder [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
 - Node.js und npm ([https://docs.npmjs.com/downloading-and-installing-node-js-and-npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm))
+- [PostGIS](https://postgis.net)
+- [PostgreSQL](https://www.postgresql.org)
 
 ## Repository lokal klonen
 
