@@ -45,12 +45,6 @@ Ausserdem kann man sich Statistiken über die Anzahl Sichtungen nach Höhe und n
   <img src="assets/Bedeckung.png" style="width: 30%;" />
 </p>
 
-<div style="display: flex; gap: 10px;">
-  <img src="assets/Info.png" style="width: 30%;" />
-  <img src="assets/Höhe.png" style="width: 30%;" />
-  <img src="assets/Bedeckung.png" style="width: 30%;" />
-</div>
-
 ## Verwendete Technologien & Methoden
 
 | Komponente | Technologie / Methode                     |
