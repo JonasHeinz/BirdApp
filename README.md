@@ -208,7 +208,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS observations_unique
 ``` shell
 # Unter server -> scripts hat es eine Datei mit dem Namen updateDb.py.
 cd server/scripts
-#  Es ist ein Skript welches die Datenbank mit Daten (Family, Species und Observations) abfüllt oder aktualisiert. Es werden Daten von den letzten 365 Tage in die Datenbank geschrieben. (Dies wird lange dauern).Zur Nachverfolgung des Datenimports wird automatisch die Datei observation_import im Ordner server/scripts erstellt, welche alle übernommenen Einträge auflistet.
+#  Es ist ein Skript welches die Datenbank mit Daten (Family, Species und Observations) abfüllt oder aktualisiert. 
+# Es werden Daten von den letzten 365 Tage in die Datenbank geschrieben. (Dies wird lange dauern).
+# Zur Nachverfolgung des Datenimports wird automatisch die Datei observation_import im Ordner server/scripts erstellt, welche alle übernommenen Einträge auflistet.
 python updateDb.py
 
 ```
