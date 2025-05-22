@@ -215,7 +215,7 @@ python updateDb.py
 
 ```
 
-Solltest du, gegen unsere Empfehlung, oben andere Parameter gewählt haben kannst du diese hier auf den Zeilen 35-39 anpassen.
+Solltest du, gegen unsere Empfehlung, oben andere Datenbankparameter gewählt haben kannst du diese im Skript updateDb.py auf den Zeilen 35-39 anpassen.
 
 
 ## Jetzt sollte alles startklar sein und du kannst die App starten und nutzen.
