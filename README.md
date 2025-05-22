@@ -1,11 +1,16 @@
 # Vogelradar
+Dieses Repository wurde im Rahmen einer Semesterarbeit erstellt.  
+Unsere Web-App ermöglicht es Vogelinteressierten, sich über das Vorkommen und Verhalten verschiedener Vogelarten in der Schweiz zu informieren. Herzstück der Anwendung ist eine interaktive Karte, auf der Sichtungen in einem Raster aggregiert und durch Farbintensität visualisiert werden – je dunkler das Feld, desto häufiger die Beobachtungen. Nutzer:innen können gezielt nach Vogelarten oder ganzen Familien filtern und den Betrachtungszeitraum mithilfe eines Sliders eingrenzen. Zusätzlich bietet ein Liniendiagramm einen Überblick über zeitliche Häufungen der Sichtungen.  
+Zusätzlich erhält man weiterführende Informationen zu einer Vogelart. Ergänzt wird dies durch statistische Auswertungen zur Höhenverteilung der Sichtungen sowie zur bevorzugten Bodenbedeckung.
+
+Auf der [GitHub Pages](https://jonasheinz.github.io/BirdApp/) sieht man weiterführende Informationen
+
+Wie die Web-App entwickelt wurde und wie sie lokal gestartet werden kann, lässt sich in dieser Anleitung nachvollziehen:
 
 ⚠️ **ACHTUNG:** Das Projekt läuft nur mit der **nicht öffentlichen REST API** von [ornitho.ch](https://www.ornitho.ch)!
 
 - **Frontend:** React.js, OpenLayers und MUI
 - **Backend:** FastAPI 
-
-GitHub Pages: https://jonasheinz.github.io/BirdApp/
 
 Getestet mit Node version 22.14.0, openlayers 9.1.0, react 18.3.1
 
@@ -134,26 +139,34 @@ Wenn du diese Parameter verwendest, musst du anschliessend keine weiteren Anpass
 
 ## Erstellen der Tabellen in pgAdmin mit SQL Code
 
-Um die Tabellen zu erstellen, kannst du den nachfolgenden SQL Code in pgAdmin ausführen. Dies kannst du unter dem Tab Query Tool machen. Wenn du die Datenbank mit den oben genannten Parametern erstellt hast, musst du nur noch den SQL Code ausführen.
+Um die Tabellen zu erstellen, kannst du den nachfolgenden SQL Code (auch abgelegt im Filr *create_database.sql* ) in pgAdmin ausführen. Dies kannst du unter dem Tab Query Tool machen. Wenn du die Datenbank mit den oben genannten Parametern erstellt hast, musst du nur noch den SQL Code ausführen.
 
 ```sql
 -- Enable PostGIS extension
 CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Table: public.family
+-- Erstellt die Tabelle family im public-Schema, wenn sie noch nicht existiert.
 CREATE TABLE IF NOT EXISTS public.family (
+    -- Erstellt Ganzzahlige id Spalte, die nicht Null sein darf
     id integer NOT NULL,
+    -- Die Spalte latin_name (lateinischer Name der Vögel) ist ein nicht-leeres Textfeld (beliebig lange Zeichenkette), mit Standard-Sortierung (COLLATE) für Textvergleiche. 
     latin_name text COLLATE pg_catalog."default" NOT NULL,
+    -- Diese Einschränkung macht die Spalte id zum Primärschlüssel der Tabelle.
     CONSTRAINT family_pkey PRIMARY KEY (id)
 );
 ALTER TABLE IF EXISTS public.family OWNER to postgres;
 
 -- Table: public.species
+-- Erstellt die Tabelle species im public-Schema, wenn sie noch nicht existiert.
 CREATE TABLE IF NOT EXISTS public.species (
+    -- SERIAL erstellt eine automatisch steigende, eindeutige Ganzzahl in der Spalte seciesid.
     speciesid SERIAL PRIMARY KEY,
+    -- Die Spalte rarity (Seltenheit), latinname (lateinischer Name der Vögel) und germanname (deutscher Name der Vögel) ist ein Textfeld (beliebig lange Zeichenkette), das die Standardsortierung (COLLATE) für Textvergleiche verwendet.
     rarity text COLLATE pg_catalog."default",
     latinname text COLLATE pg_catalog."default",
     germanname text COLLATE pg_catalog."default",
+    -- family_id ist ein Fremdschlüssel (Ganzzahllig), der auf id in der Tabelle family zeigt.
     family_id integer,
     CONSTRAINT fk_species_family FOREIGN KEY (family_id)
         REFERENCES public.family (id) MATCH SIMPLE
@@ -163,12 +176,19 @@ CREATE TABLE IF NOT EXISTS public.species (
 ALTER TABLE IF EXISTS public.species OWNER TO postgres;
 
 -- Table: public.observations
+-- Erstellt die Tabelle observations im public-Schema, wenn sie noch nicht existiert.
 CREATE TABLE IF NOT EXISTS public.observations (
+    -- Eindeutige, automatisch hochzählende ID für jede Beobachtung
 	observationid SERIAL PRIMARY KEY,
+    -- Zeitstempel der Beobachtung (Datum & Uhrzeit ohne Zeitzone)
     date timestamp without time zone,
+    -- Referenz auf eine Art in der Tabelle species
     speciesid integer,
+    -- 	3D-Punkt-Geometrie (mit Höhe) im WGS 84-Koordinatensystem (EPSG:4326)
     geom geometry(PointZ,4326),
+    -- Beschreibung der Landbedeckung (z. B. „Wald“, „Wiese“ etc.)
 	landcover TEXT,
+    -- Die Spalte speciesid verweist auf species.speciesid.
     CONSTRAINT observation_speciesid_fkey FOREIGN KEY (speciesid)
         REFERENCES public.species (speciesid) MATCH SIMPLE
         ON UPDATE NO ACTION
@@ -177,6 +197,7 @@ CREATE TABLE IF NOT EXISTS public.observations (
 ALTER TABLE IF EXISTS public.observations OWNER to postgres;
 
 -- Unique index on observations
+-- Erstellt einen Index, der dafür sorgt, dass keine zwei Zeilen die gleichen Werte in allen angegebenen Spalten haben dürfen 
 CREATE UNIQUE INDEX IF NOT EXISTS observations_unique
     ON public.observations (date ASC NULLS LAST, speciesid ASC NULLS LAST, geom ASC NULLS LAST);
 
@@ -186,11 +207,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS observations_unique
 
 ``` shell
 # Unter server -> scripts hat es eine Datei mit dem Namen updateDb.py.
-cd scripts
-# Datenbank aufsetzen oder aktualisieren
-# Dies lädt dir alle Daten (Family, Species und Observations) der letzen 365 Tage in die Datenbank (dies wird lange dauern).
+cd server/scripts
+#  Es ist ein Skript welches die Datenbank mit Daten (Family, Species und Observations) abfüllt oder aktualisiert. Es werden Daten von den letzten 365 Tage in die Datenbank geschrieben. (Dies wird lange dauern).Zur Nachverfolgung des Datenimports wird automatisch die Datei observation_import im Ordner server/scripts erstellt, welche alle übernommenen Einträge auflistet.
 python updateDb.py
-# Zur Nachverfolgung des Datenimports wird automatisch die Datei observation_import im Ordner server/scripts erstellt, welche alle übernommenen Einträge auflistet.
+
 ```
 
 Solltest du, gegen unsere Empfehlung, oben andere Parameter gewählt haben kannst du diese hier auf den Zeilen 35-39 anpassen.
