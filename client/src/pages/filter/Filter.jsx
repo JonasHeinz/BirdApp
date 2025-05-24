@@ -10,6 +10,7 @@ import {
 import { useState, useEffect } from "react";
 import SelectionTable from "./SelectionTable";
 import AddIcon from "@mui/icons-material/Add";
+import ListboxComponent from "./ListComponent"; // Assuming you have this component for virtualization
 
 
 function Filter({ birds, setBirds, setFamilies, families }) {
@@ -79,6 +80,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
  
         <FormControl sx={{ flex: 1 }}>
           <Autocomplete
+            ListboxComponent={ListboxComponent}
             multiple
             disableCloseOnSelect
             options={availableSpecies}
@@ -116,6 +118,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
         <Stack direction="row" spacing={1} alignItems="center">
         <FormControl sx={{ flex: 1 }}>
           <Autocomplete
+            ListboxComponent={ListboxComponent}
             multiple
             disableCloseOnSelect
             options={availableFamilies}

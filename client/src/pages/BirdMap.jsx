@@ -255,7 +255,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
           <CircularProgress />
         </div>
       )}
-      {createLegend()}
+     {birdIds.length > 0 && createLegend()}
       {hoverCount !== null && (
         <div
           style={{

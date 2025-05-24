@@ -51,61 +51,79 @@ export default function VogelZeitstrahl({ birdIds, range, setRange, startDate, e
   }, [birdIds]);
 
   return (
-    <Box p={2}>
-      <Typography variant="h6">Zeitraum auswählen:</Typography>
+  <Box p={2}>
+    <Typography variant="h6">Zeitraum auswählen:</Typography>
 
-      <Box height={"20vh"} position="relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <XAxis
-              dataKey="timestamp"
-              tickFormatter={(d) => new Date(d).toLocaleDateString()}
-              type="number"
-              domain={[startDate.getTime(), endDate.getTime()]}
-              scale="time"
-            />
-            <YAxis />
-            <Tooltip labelFormatter={(d) => new Date(d).toLocaleDateString()} />
-            <Line dataKey="count" stroke="#2e7d32" type="monotone" dot={false} />
-            <ReferenceArea
-              x1={range[0].getTime()}
-              x2={range[1].getTime()}
-              strokeOpacity={0.3}
-              fill="#81c784"
-              fillOpacity={0.3}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+    <Box height={"20vh"} position="relative">
+      {birdIds.length > 0 ? (
+        <>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <XAxis
+                dataKey="timestamp"
+                tickFormatter={(d) => new Date(d).toLocaleDateString()}
+                type="number"
+                domain={[startDate.getTime(), endDate.getTime()]}
+                scale="time"
+              />
+              <YAxis />
+              <Tooltip labelFormatter={(d) => new Date(d).toLocaleDateString()} />
+              <Line dataKey="count" stroke="#2e7d32" type="monotone" dot={false} />
+              <ReferenceArea
+                x1={range[0].getTime()}
+                x2={range[1].getTime()}
+                strokeOpacity={0.3}
+                fill="#81c784"
+                fillOpacity={0.3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
 
-        <Box position="absolute" bottom={16} left={65} right={5}>
-          <Slider
-            sx={{
-              color: "#2e7d32", // Farbe des Tracks und Thumbs
-              "& .MuiSlider-thumb": {
-                backgroundColor: "#2e7d32", // Farbe des Thumbs (der Schieberegler)
-                "&:hover": {
-                  backgroundColor: "#388e3c", // Hover-Farbe für den Thumb
+          <Box position="absolute" bottom={16} left={65} right={5}>
+            <Slider 
+              sx={{
+                color: "#2e7d32",
+                "& .MuiSlider-thumb": {
+                  backgroundColor: "#2e7d32",
+                  "&:hover": {
+                    backgroundColor: "#388e3c",
+                  },
                 },
-              },
-              "& .MuiSlider-rail": {
-                backgroundColor: "#bdbdbd", // Farbe des inaktiven Tracks
-              },
-              "& .MuiSlider-track": {
-                backgroundColor: "#2e7d32", // Farbe des aktiven Tracks
-              },
-            }}
-            size="small"
-            value={tempRange}
-            onChange={handleChange}
-            onChangeCommitted={handleChangeCommitted}
-            min={startDate.getTime()}
-            max={endDate.getTime()}
-            step={24 * 60 * 60 * 1000}
-            valueLabelDisplay="auto"
-            valueLabelFormat={(value) => new Date(value).toLocaleDateString()}
-          />
+                "& .MuiSlider-rail": {
+                  backgroundColor: "#bdbdbd",
+                },
+                "& .MuiSlider-track": {
+                  backgroundColor: "#2e7d32",
+                },
+              }}
+              size="small"
+              value={tempRange}
+              onChange={handleChange}
+              onChangeCommitted={handleChangeCommitted}
+              min={startDate.getTime()}
+              max={endDate.getTime()}
+              step={24 * 60 * 60 * 1000}
+              valueLabelDisplay="auto"
+              valueLabelFormat={(value) => new Date(value).toLocaleDateString()}
+            />
+          </Box>
+        </>
+      ) : (
+        <Box
+          height="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          bgcolor="#f5f5f5"
+          borderRadius={2}
+        >
+          <Typography variant="body1" color="textSecondary">
+            Keine Beobachtungsdaten verfügbar.
+          </Typography>
         </Box>
-      </Box>
+      )}
     </Box>
-  );
+  </Box>
+);
+
 }
