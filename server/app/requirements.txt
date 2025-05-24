@@ -6,3 +6,5 @@ orjson
 psycopg2
 pydantic
 authlib
+dotenv
+requests
