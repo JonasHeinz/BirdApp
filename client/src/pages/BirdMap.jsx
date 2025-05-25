@@ -9,6 +9,7 @@ import { GeoJSON } from "ol/format";
 import chroma from "chroma-js";
 import { CircularProgress, Typography } from "@mui/material";
 import { ScaleLine } from "ol/control";
+import { none } from "ol/centerconstraint";
 
 const BirdMap = ({ birdIds, familiesIds, range }) => {
   const mapRef = useRef(null);
@@ -127,6 +128,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     })
       .then((res) => res.json())
       .then((data) => {
+        if (data  && data.grid1.length >0 && data.grid5.length >0) {
         const format = new GeoJSON();
 
         // Funktionen zur Feature-Verarbeitung
@@ -182,6 +184,13 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
           min: min,
           max: max,
         });
+      }else{
+        setLegendData({
+          scale: 0,
+          min: 0,
+          max: 0,
+        });
+      }
       })
       .catch((err) => {
         console.error("Fehler beim Laden des Grids:", err);
@@ -255,7 +264,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
           <CircularProgress />
         </div>
       )}
-     {birdIds.length > 0 && createLegend()}
+     {birdIds.length > 0 && legendData && createLegend()}
       {hoverCount !== null && (
         <div
           style={{

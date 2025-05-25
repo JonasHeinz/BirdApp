@@ -184,9 +184,7 @@ def get_geojson(request: GeoJsonRequest):
 
     # Wenn keine Sichtungen → Geometrien ohne Zählung zurückgeben
     if sightings.empty:
-        response["grid1"] = grid1[["geometry"]].to_json()
-        response["grid5"] = grid5[["geometry"]].to_json()
-        return JSONResponse(content=response)
+        return JSONResponse(content={"grid1": [], "grid5": []})
 
     def count_points_per_cell(grid, sightings):
         if "id" not in grid.columns:
@@ -302,3 +300,5 @@ def get_landcover_timeline(latinName: Optional[str] = None):
 
     finally:
         db_pool.putconn(conn)
+
+

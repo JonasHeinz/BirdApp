@@ -55,7 +55,7 @@ export default function VogelZeitstrahl({ birdIds, range, setRange, startDate, e
     <Typography variant="h6">Zeitraum auswählen:</Typography>
 
     <Box height={"20vh"} position="relative">
-      {birdIds.length > 0 ? (
+      {birdIds.length > 0 && data.length > 0 ? (
         <>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
