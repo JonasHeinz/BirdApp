@@ -130,7 +130,7 @@ function Filter({ birds, setBirds, setFamilies, families }) {
               return (
                 <li key={option.id} {...restProps}>
                   <Checkbox sx={{ mr: 1 }} checked={selected} />
-                  ({option.latin_name})
+                  {option.latin_name}
                 </li>
               );
             }}

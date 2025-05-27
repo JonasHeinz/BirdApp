@@ -8,7 +8,6 @@ from psycopg2.extras import RealDictCursor
 from shapely.geometry import box
 import geopandas as gpd
 import os
-import time
 from dotenv import load_dotenv
 from pictures import get_image_for_species, get_wikipedia_summary
 
