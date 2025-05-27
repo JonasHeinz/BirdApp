@@ -41,11 +41,11 @@ DB_PASSWD = os.getenv("DB_PASSWD")
 oauth_session = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
 conn = psycopg2.connect(
-    dbname="VogelRadar",     # Name deiner Datenbank
-    user="postgres",        # Dein DB-Benutzername
-    password=DB_PASSWD,  # Dein Passwort
-    host="localhost",        # Oder z. B. "127.0.0.1"
-    port="5433"              # Standardport für PostgreSQL
+    dbname="postgres",
+    user="postgres",
+    password="postgres",
+    host="10.175.13.26",
+    port="5432"
 )
 cur = conn.cursor()
 
@@ -130,7 +130,7 @@ logging.basicConfig(
 
 def getObservations():
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=3650)
+    start_date = end_date - timedelta(days=365)
 
     for chunk_start, chunk_end in daterange_weeks(start_date, end_date):
         date_from_str = chunk_start.strftime("%d.%m.%Y")
