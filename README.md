@@ -90,7 +90,7 @@ Endpoints:
 /getObservationsTimeline/   # Gibt für einen angegebenen Zeitraum und eine Liste von Vogelarten (über ihre IDs) die Anzahl der Beobachtungen pro Tag zurück.       
 /getImage/                  # Gibt das Foto von der Wikimedia Commons API zurück.
 /getText/                   # Gibt den ersten Absatz eines Wikipedia-Artikels zurück.  
-/getGeojson/                # 
+/getGeojson/                # Gibt Vektor Grid 5km und 1km als GeoJson zurück
 /getHoehenDiagramm/         # Gibt die Anzahl der Beobachtungen einer angegebenen Vogelart in 500-Meter-Höhenintervallen zurück.
 /getLandcover/              # Gibt die Verteilung der Beobachtung nach Bodensbedeckungsart zurück. 
 ```
