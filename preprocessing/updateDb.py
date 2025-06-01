@@ -1,7 +1,3 @@
-
-# Datenbank Verbindung
-from psycopg2 import pool
-from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 from authlib.integrations.requests_client import OAuth1Session
@@ -13,24 +9,18 @@ from shapely.geometry import Point
 import time
 import json
 
-with open("rarity.json") as f:
+# Laden der Raritätsstufen aus JSON-Datei
+with open("data/rarity.json") as f:
     rarity_levels = json.load(f)
 
-landcover_gdf = gpd.read_file("zip://../data/LandCoverage.zip")
-landcover_gdf = landcover_gdf.to_crs(epsg=4326) 
 
-# CORS Einstellungen
-# siehe: https://fastapi.tiangolo.com/tutorial/cors/#use-corsmiddleware
-origins = [
-    "*",
-    "http://localhost",
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "http://localhost:5173"
-]
+# Laden der Landbedeckungsdaten (Shapefile im ZIP-Archiv)
+landcover_gdf = gpd.read_file("zip://data/LandCoverage.zip")
+# Koordinatensystem in WGS84 (EPSG:4326) umwandeln für geografische Berechnungen
+landcover_gdf = landcover_gdf.to_crs(epsg=4326)
 
 
-# .env Variablen laden
+# .env Variablen laden (Sensible Daten wie Passwörter, API Keys)
 load_dotenv()
 USER_EMAIL = os.getenv("USER_EMAIL")
 USER_PW = os.getenv("USER_PW")
@@ -38,8 +28,10 @@ OAUTH_CONSUMER_KEY = os.getenv("OAUTH_CONSUMER_KEY")
 OAUTH_CONSUMER_SECRET = os.getenv("OAUTH_CONSUMER_SECRET")
 DB_PASSWD = os.getenv("DB_PASSWD")
 
+# OAuth1 Session zur Authentifizierung bei ornitho.ch API
 oauth_session = OAuth1Session(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET)
 
+# Verbindung zur PostgreSQL-Datenbank aufbauen
 conn = psycopg2.connect(
     dbname="postgres",
     user="postgres",
@@ -49,30 +41,37 @@ conn = psycopg2.connect(
 )
 cur = conn.cursor()
 
-
+# --- Funktionen ---
 
 
 def get_species():
+    """
+    Lädt Arten aus der ornitho.ch API nach Seltenheitsstufen und fügt sie in die DB ein.
+    """
     for i in rarity_levels:
-        # API Request
+        # URL für den API-Request mit Filter auf Taxonomie-Gruppe 1 und Seltenheit i
         url = f"https://www.ornitho.ch/api/species?user_email={USER_EMAIL}&user_pw={USER_PW}&id_taxo_group=1&rarity={i}"
-    
+
         response = oauth_session.get(url)
         if response.status_code == 200:
             len(response.json().get("data", []))
+            # Für jede Art in den API-Daten: Einfügen in die Datenbank
             for i in response.json().get("data", []):
                 insert_species(
                     rarity=i.get("rarity"),
                     latinname=i.get("latin_name"),
-                    germanname=i.get("german_name").replace("|", "").replace("_", " "),
+                    germanname=i.get("german_name").replace(
+                        "|", "").replace("_", " "),
                     id=i.get("id"),
                     family_id=i.get("sempach_id_family")
                 )
 
-            
-def insert_species(rarity, latinname, germanname, id, family_id):
-    try:
 
+def insert_species(rarity, latinname, germanname, id, family_id):
+    """
+    Fügt eine einzelne Art in die Tabelle 'species' ein.
+    """
+    try:
 
         sql = """
         INSERT INTO public.species (rarity, latinname, germanname, speciesid, family_id)
@@ -87,6 +86,9 @@ def insert_species(rarity, latinname, germanname, id, family_id):
 
 
 def get_families():
+    """
+    Lädt Vogelfamilien von ornitho.ch API und fügt sie in die DB ein.
+    """
     # API Request
     url = f"https://www.ornitho.ch/api/families?user_email={USER_EMAIL}&user_pw={USER_PW}&id_taxo_group=1"
 
@@ -94,13 +96,18 @@ def get_families():
     if response.status_code == 200:
         len(response.json().get("data", []))
         for i in response.json().get("data", []):
-        
+
             insert_families(
                 familyid=i.get("id"),
-                latin_name=i.get("latin_name").replace("(", "").replace(")", ""),
+                latin_name=i.get("latin_name").replace(
+                    "(", "").replace(")", ""),
             )
-            
+
+
 def insert_families(familyid, latin_name):
+    """
+    Fügt eine einzelne Familie in die Tabelle 'family' ein.
+    """
     try:
 
         sql = """
@@ -114,21 +121,31 @@ def insert_families(familyid, latin_name):
         print("Fehler beim Einfügen:", e)
 
 
-
 def daterange_weeks(start_date, end_date):
+    """
+    Generator, der Wochenabschnitte zwischen Start- und Enddatum liefert.
+    """
     current = start_date
     while current < end_date:
         next_week = current + timedelta(days=1)
+        # Rückgabe: Start- und Enddatum für den Chunk
         yield current, min(next_week - timedelta(days=1), end_date)
         current = next_week
 
+
+# Logging konfigurieren
 logging.basicConfig(
     filename='observation_import.log',
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s'
 )
 
+
 def getObservations():
+    """
+    Lädt Beobachtungen der letzten 365 Tage in Wochenabschnitten
+    von der ornitho.ch API und speichert sie in der DB.
+    """
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365)
 
@@ -139,30 +156,34 @@ def getObservations():
 
         url = f"https://www.ornitho.ch/api/observations?user_email={USER_EMAIL}&user_pw={USER_PW}&date_from={date_from_str}&date_to={date_to_str}"
 
-        # Try the request up to 3 times
+        # Bis zu 3 Versuche, um API-Daten abzurufen
         for attempt in range(3):
             try:
                 response = oauth_session.get(url, timeout=15)
                 if response.status_code == 200:
                     break
-                logging.warning(f"Attempt {attempt+1}: API returned {response.status_code}")
+                logging.warning(
+                    f"Attempt {attempt+1}: API returned {response.status_code}")
             except Exception as e:
                 logging.error(f"Attempt {attempt+1}: Request failed: {e}")
             time.sleep(2)
         else:
-            logging.error(f"Failed to retrieve data from {date_from_str} to {date_to_str} after 3 attempts.")
+            logging.error(
+                f"Failed to retrieve data from {date_from_str} to {date_to_str} after 3 attempts.")
             continue
 
-        # Handle data
+         # Verarbeitung der erhaltenen Daten
         try:
             data = response.json().get("data", {})
             sightings = data.get("sightings", [])
             if not isinstance(sightings, list):
-                logging.warning(f"No valid 'sightings' list in response for {date_from_str} to {date_to_str}")
+                logging.warning(
+                    f"No valid 'sightings' list in response for {date_from_str} to {date_to_str}")
                 continue
 
             for i in sightings:
                 try:
+                    # Daten aus Observation extrahieren
                     species = i.get("species", {}).get("@id")
                     date_iso = i.get("date", {}).get("@ISO8601")
                     place = i.get("place", {})
@@ -170,6 +191,7 @@ def getObservations():
                     lat = place.get("coord_lat")
                     alt = place.get("altitude")
 
+                    # Prüfen, ob alle wichtigen Daten vorhanden sind
                     if None in (species, date_iso, lon, lat, alt):
                         logging.warning(f"Incomplete data skipped: {i}")
                         continue
@@ -182,28 +204,48 @@ def getObservations():
                         z=alt
                     )
                 except Exception as e:
-                    logging.error(f"Error processing observation: {e} | Entry: {i}")
+                    logging.error(
+                        f"Error processing observation: {e} | Entry: {i}")
                     # Continue to the next observation even if this one fails
 
         except Exception as e:
-            logging.error(f"Error parsing JSON for range {date_from_str} to {date_to_str}: {e}")
+            logging.error(
+                f"Error parsing JSON for range {date_from_str} to {date_to_str}: {e}")
+
 
 def get_landcover_value(lon, lat):
+    """
+    Ermittelt den Landbedeckungswert an den angegebenen Koordinaten.
+
+    Args:
+        lon (float): Längengrad
+        lat (float): Breitengrad
+
+    Returns:
+        Wert des Landbedeckungstyps oder None, falls kein Treffer
+    """
     pt = Point(lon, lat)
     matches = landcover_gdf[landcover_gdf.geometry.contains(pt)]
     if not matches.empty:
-        return matches.iloc[0]["OBJVAL"] 
+        return matches.iloc[0]["OBJVAL"]
     return None
 
+
 def insert_observation(isozeit, speciesid, x, y, z):
+    """
+    Fügt eine Beobachtung in die Tabelle 'observations' ein.
+    Prüft, ob die Art in der DB existiert, berechnet Landbedeckung und schreibt Geo-Daten.
+    """
     try:
-        # Check if the species ID exists
-        cur.execute("SELECT 1 FROM public.species WHERE speciesid = %s", (speciesid,))
+        # Prüfen, ob Art in DB vorhanden
+        cur.execute(
+            "SELECT 1 FROM public.species WHERE speciesid = %s", (speciesid,))
         if not cur.fetchone():
-            logging.warning(f"Species ID {speciesid} not found in the database. Skipping observation.")
+            logging.warning(
+                f"Species ID {speciesid} not found in the database. Skipping observation.")
             return
 
-        # Hole Landcover-Wert
+       # Landbedeckung am Beobachtungsort abfragen
         landcover_value = get_landcover_value(float(x), float(y))
 
         sql = """
@@ -213,11 +255,12 @@ def insert_observation(isozeit, speciesid, x, y, z):
         """
         cur.execute(sql, (isozeit, speciesid, x, y, z, landcover_value))
         conn.commit()
-        logging.info(f"Inserted observation {isozeit} | SID {speciesid} | LC {landcover_value}")
+        logging.info(
+            f"Inserted observation {isozeit} | SID {speciesid} | LC {landcover_value}")
     except Exception as e:
-        logging.error(f"Database insert failed for {isozeit}, {speciesid}: {e}")
+        logging.error(
+            f"Database insert failed for {isozeit}, {speciesid}: {e}")
 
 
-# get_families()
-# get_species()
-getObservations()
+get_families()
+

@@ -113,6 +113,7 @@ function Image() {
             onChange={handleViewChange}
             aria-label="Diagrammwahl"
             sx={{ mb: 2 }}
+            color="primary"
           >
             <ToggleButton value="info" aria-label="Info">
               Info
@@ -137,11 +138,11 @@ function Image() {
               }}
             >
               {imageUrl && (
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "left" }}>
                   <img
                     src={imageUrl}
                     alt={latinName}
-                    style={{ maxHeight: "200px", objectFit: "cover" }}
+                    style={{ maxHeight: "40vh", objectFit: "cover" }}
                   />
                   <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
                     <Link
@@ -163,7 +164,6 @@ function Image() {
                     flexDirection: "column",
                     alignItems: "flex-start",
                     textAlign: "justify",
-                    maxWidth: 500,
                   }}
                 >
                   <Typography

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
@@ -9,19 +9,20 @@ import { GeoJSON } from "ol/format";
 import chroma from "chroma-js";
 import { CircularProgress, Typography } from "@mui/material";
 import { ScaleLine } from "ol/control";
-import { none } from "ol/centerconstraint";
 
+// BirdMap-Komponente zeigt eine interaktive Karte mit Rasterdaten für Vogelsichtungen
 const BirdMap = ({ birdIds, familiesIds, range }) => {
-  const mapRef = useRef(null);
-  const olMapRef = useRef(null);
-  const grid1LayerRef = useRef(null);
-  const grid5LayerRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [legendData, setLegendData] = useState(null);
-  const [hoverCount, setHoverCount] = useState(null);
-  const [activeBasemap, setActiveBasemap] = useState("lightgray");
-  const baseLayersRef = useRef({});
+  const mapRef = useRef(null); // Referenz auf das div-Element für die Karte
+  const olMapRef = useRef(null); // Referenz auf die OpenLayers-Map-Instanz
+  const grid1LayerRef = useRef(null); // Layer für das feinere 1-km-Raster
+  const grid5LayerRef = useRef(null); // Layer für das gröbere 5-km-Raster
+  const [loading, setLoading] = useState(false); // Ladeanzeige
+  const [legendData, setLegendData] = useState(null); // Daten für die Legende
+  const [hoverCount, setHoverCount] = useState(null); // Wert für Hover-Anzeige
+  const [activeBasemap, setActiveBasemap] = useState("lightgray"); // Aktive Basemap
+  const baseLayersRef = useRef({}); // Referenz auf Basemap-Layer
 
+  // Sichtbarkeit der Hintergrundkarte wechseln
   useEffect(() => {
     const layers = baseLayersRef.current;
     if (!layers) return;
@@ -31,14 +32,15 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     });
   }, [activeBasemap]);
 
+  // Initialisierung der OpenLayers-Karte beim ersten Rendern
   useEffect(() => {
     const view = new View({
       projection: "EPSG:3857",
-      center: [914000, 5900000],
+      center: [914000, 5900000], // Zentrum der Schweiz
       zoom: 7,
       maxZoom: 12,
       minZoom: 6,
-      extent: [600000, 5700000, 1300000, 6350000],
+      extent: [600000, 5700000, 1300000, 6350000], // Begrenzung der Karte
     });
 
     const map = new Map({
@@ -47,6 +49,8 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
       view,
       controls: [new ScaleLine({ units: "metric" })],
     });
+
+    // Hintergrundkarten definieren
     const baseLayers = {
       lightgray: new TileLayer({
         source: new XYZ({
@@ -72,9 +76,11 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
         visible: false,
       }),
     };
+    // Basemaps zur Karte hinzufügen
     Object.values(baseLayers).forEach((layer) => map.addLayer(layer));
     baseLayersRef.current = baseLayers;
 
+    // Hover-Ereignis: Count anzeigen
     map.on("pointermove", (event) => {
       const feature = map.forEachFeatureAtPixel(event.pixel, (feature) => feature);
       if (feature) {
@@ -85,6 +91,8 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
         setHoverCount(null);
       }
     });
+
+    // Zoom-Stufenabhängigkeit: 1km- oder 5km-Raster anzeigen
     map.on("moveend", () => {
       const zoom = map.getView().getZoom();
       if (grid1LayerRef.current && grid5LayerRef.current) {
@@ -96,10 +104,11 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     olMapRef.current = map;
 
     return () => {
-      map.setTarget(null);
+      map.setTarget(null); // Karte bei Unmount entfernen
     };
   }, []);
 
+  // Datenabruf bei Änderung der Filterparameter
   useEffect(() => {
     if (!olMapRef.current) return;
     const map = olMapRef.current;
@@ -116,6 +125,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
 
     setLoading(true);
 
+    // API-Request mit Filterparametern
     fetch("http://localhost:8000/getGeojson/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -128,78 +138,84 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data  && data.grid1.length >0 && data.grid5.length >0) {
-        const format = new GeoJSON();
+        if (data && data.grid1.length > 0 && data.grid5.length > 0) {
+          const format = new GeoJSON();
 
-        // Funktionen zur Feature-Verarbeitung
-        const processFeatures = (geojsonData) => {
-          const features = format.readFeatures(geojsonData, {
-            dataProjection: "EPSG:4326",
-            featureProjection: "EPSG:3857",
+          // Features extrahieren und Zählwerte sammeln
+          const processFeatures = (geojsonData) => {
+            const features = format.readFeatures(geojsonData, {
+              dataProjection: "EPSG:4326",
+              featureProjection: "EPSG:3857",
+            });
+            const counts = features.map((f) => f.get("count") || 0);
+            return { features, counts };
+          };
+
+          const grid1 = processFeatures(data.grid1);
+          const grid5 = processFeatures(data.grid5);
+
+          // Wertebereich berechnen
+          const allCounts = [...grid1.counts, ...grid5.counts];
+          const min = Math.min(...allCounts);
+          const max = Math.max(...allCounts);
+
+          // Farbskala mit Log-Skalierung definieren
+          const scale = chroma.scale("greens").domain([Math.log10(min || 0), Math.log10(max || 0)]);
+
+          // Funktion zur Layer-Erzeugung
+          const createLayer = (features, visible) => {
+            return new VectorLayer({
+              source: new VectorSource({ features }),
+              visible,
+              style: (feature) => {
+                const count = feature.get("count") || 0;
+                return new Style({
+                  fill: new Fill({
+                    color: scale(Math.log10(count || 0))
+                      .alpha(0.5)
+                      .css(),
+                  }),
+                  stroke: new Stroke({
+                    color: "rgba(80, 80, 80, 0.5)", // Dunkelgrauer Rand mit 50 % Deckkraft
+                    width: 1, // 1px dicker Rand
+                  }),
+                });
+              },
+            });
+          };
+
+          // Zoom prüfen und Layer sichtbar setzen
+          const zoom = map.getView().getZoom();
+          const layer1 = createLayer(grid1.features, zoom >= 9);
+          const layer5 = createLayer(grid5.features, zoom < 9);
+
+          map.addLayer(layer1);
+          map.addLayer(layer5);
+          grid1LayerRef.current = layer1;
+          grid5LayerRef.current = layer5;
+
+          setLegendData({
+            scale,
+            min: min,
+            max: max,
           });
-          const counts = features.map((f) => f.get("count") || 0);
-          return { features, counts };
-        };
-
-        const grid1 = processFeatures(data.grid1);
-        const grid5 = processFeatures(data.grid5);
-        const allCounts = [...grid1.counts, ...grid5.counts];
-        const min = Math.min(...allCounts);
-        const max = Math.max(...allCounts);
-
-        const scale = chroma.scale("greens").domain([Math.log10(min || 0), Math.log10(max || 0)]);
-
-        const createLayer = (features, visible) => {
-          return new VectorLayer({
-            source: new VectorSource({ features }),
-            visible,
-            style: (feature) => {
-              const count = feature.get("count") || 0;
-              return new Style({
-                fill: new Fill({
-                  color: scale(Math.log10(count || 0))
-                    .alpha(0.5)
-                    .css(), 
-                }),
-                stroke: new Stroke({
-                  color: "rgba(80, 80, 80, 0.5)", // Dunkelgrauer Rand mit 50 % Deckkraft
-                  width: 1, // 1px dicker Rand
-                }),
-              });
-            },
+        } else {
+          setLegendData({
+            scale: 0,
+            min: 0,
+            max: 0,
           });
-        };
-
-        const zoom = map.getView().getZoom();
-        const layer1 = createLayer(grid1.features, zoom >= 9);
-        const layer5 = createLayer(grid5.features, zoom < 9);
-
-        map.addLayer(layer1);
-        map.addLayer(layer5);
-        grid1LayerRef.current = layer1;
-        grid5LayerRef.current = layer5;
-
-        setLegendData({
-          scale,
-          min: min,
-          max: max,
-        });
-      }else{
-        setLegendData({
-          scale: 0,
-          min: 0,
-          max: 0,
-        });
-      }
+        }
       })
       .catch((err) => {
         console.error("Fehler beim Laden des Grids:", err);
       })
       .finally(() => {
         setLoading(false);
-      });
+      }); 
   }, [birdIds, familiesIds, range]);
 
+  // Legende zur Darstellung der Farbskala
   const createLegend = () => {
     if (!legendData || !legendData.scale) return null;
 
@@ -264,7 +280,7 @@ const BirdMap = ({ birdIds, familiesIds, range }) => {
           <CircularProgress />
         </div>
       )}
-     {birdIds.length > 0 && legendData && createLegend()}
+      {birdIds.length > 0 && legendData && createLegend()}
       {hoverCount !== null && (
         <div
           style={{

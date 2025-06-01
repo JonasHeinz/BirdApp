@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-from shapely.geometry import box
 import geopandas as gpd
 import os
 from dotenv import load_dotenv
@@ -13,7 +12,7 @@ from scripts.pictures import get_image_for_species, get_wikipedia_summary
 
 app = FastAPI()
 
-# CORS-Einstellungen
+# CORS-Konfiguration für Frontend-Kommunikation
 origins = [
     "*",
     "http://localhost",
@@ -21,6 +20,7 @@ origins = [
     "http://localhost:3000",
     "http://localhost:5173",
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -29,10 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# .env laden
+# Umgebungsvariablen laden
 load_dotenv()
 DB_PASSWD = os.getenv("DB_PASSWD")
 
+# PostgreSQL-Verbindungspool
 db_pool = pool.SimpleConnectionPool(
     minconn=1,
     maxconn=10,
@@ -43,12 +44,15 @@ db_pool = pool.SimpleConnectionPool(
     port="5433",
 )
 
-
+# Lade räumliche Rasterdaten
 grid5 = gpd.read_file("data/km_Grid_5_wgs84.gpkg")
 grid1 = gpd.read_file("data/km_Grid_1_wgs84.geojson")
 
 
 def execute_query(query, params=None):
+    """
+    Führt eine SQL-Abfrage aus und gibt das Ergebnis zurück.
+    """
     conn = None
     try:
         conn = db_pool.getconn()
@@ -67,40 +71,23 @@ def execute_query(query, params=None):
             db_pool.putconn(conn)
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello GDI Project"}
-
-
-@app.get("/about/")
-def about():
-    return HTMLResponse(
-        """
-        <html>
-          <head><title>FAST API Service</title></head>
-          <body>
-            <div align="center">
-              <h1>Simple FastAPI Server About Page</h1>
-              <p>Dokumentation unter <a href="/docs">/docs</a></p>
-            </div>
-          </body>
-        </html>
-        """
-    )
-
-
 @app.get("/getSpecies/")
 async def get_species():
+    """Gibt alle Arten aus der Tabelle 'species' zurück."""
     return execute_query("SELECT * FROM species")
 
 
 @app.get("/getFamilies/")
 async def get_families():
+    """Gibt alle Familien aus der Tabelle 'family' zurück."""
     return execute_query("SELECT * FROM family")
 
 
 @app.get("/getObservationsTimeline/")
 async def get_observations_timeline(date_from: str, date_to: str, speciesids: str):
+    """
+    Gibt Beobachtungsanzahl pro Tag für bestimmte Arten im Zeitraum zurück.
+    """
     speciesid_list = speciesids.split(",")
     placeholders = ",".join(["%s"] * len(speciesid_list))
     sql = f"""
@@ -118,12 +105,14 @@ async def get_observations_timeline(date_from: str, date_to: str, speciesids: st
 
 @app.get("/getImage/")
 def get_image(species: str):
+    """Lädt ein Bild zur übergebenen Art (über Wikipedia Commons)."""
     image_url = get_image_for_species(species)
     return JSONResponse(content={"image_url": image_url})
 
 
 @app.get("/getText/")
 def get_text(species: str):
+    """Gibt eine Kurzbeschreibung der Art zurück (Wikipedia)."""
     text_data = get_wikipedia_summary(species)
     return JSONResponse(content=text_data)
 
@@ -137,6 +126,9 @@ class GeoJsonRequest(BaseModel):
 
 @app.post("/getGeojson/")
 def get_geojson(request: GeoJsonRequest):
+    """
+    Gibt für gewählte Arten/Familien und Zeitraum ein Grid zurück.
+    """
     response = {}
 
     # Wenn keine Filter gesetzt sind → leere Grids zurückgeben
@@ -175,6 +167,7 @@ def get_geojson(request: GeoJsonRequest):
     """
     params += [request.date_from, request.date_to]
 
+    # Lade Sichtungen als GeoDataFrame
     conn = db_pool.getconn()
     try:
         sightings = gpd.GeoDataFrame.from_postgis(sql, conn, params=params)
@@ -185,6 +178,7 @@ def get_geojson(request: GeoJsonRequest):
     if sightings.empty:
         return JSONResponse(content={"grid1": [], "grid5": []})
 
+    # Zähle Sichtungen pro Zelle (grid)
     def count_points_per_cell(grid, sightings):
         if "id" not in grid.columns:
             grid["id"] = grid.index
@@ -202,6 +196,9 @@ def get_geojson(request: GeoJsonRequest):
 
 @app.get("/getHoehenDiagramm")
 def getHoehenDiagramm(species: str):
+    """
+    Gibt Häufigkeit der Sichtungen in Höhenklassen (500m-Stufen) zurück.
+    """
     conn = db_pool.getconn()
     try:
         with conn.cursor() as cursor:
@@ -243,7 +240,7 @@ def getHoehenDiagramm(species: str):
     return JSONResponse(content=data)
 
 
-# Dein coverageData als Liste von Dicts
+# Vordefinierte Landbedeckungsdaten in m²
 COVERAGE_DATA = [
     {"key": "Wald", "area": 52684999335, "color": "#228B22"},
     {"key": "Siedl", "area": 12415664072, "color": "#B22222"},
@@ -261,6 +258,9 @@ COVERAGE_DATA = [
 
 @app.get("/getLandcover/")
 def get_landcover_timeline(latinName: Optional[str] = None):
+    """
+    Gibt Beobachtungsanzahl nach Landbedeckung zurück.
+    """
     conn = db_pool.getconn()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:

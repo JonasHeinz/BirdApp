@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+// Diagramm-Komponente für Bodenbedeckung
 const LandCoverage = ({ latinName }) => {
   const [data, setData] = useState([]);
 
+  // Wenn sich der lateinische Name ändert, lade neue Daten
   useEffect(() => {
     if (!latinName) return;
 
@@ -14,8 +16,6 @@ const LandCoverage = ({ latinName }) => {
         );
         const responseData = await response.json();
 
-    
-
         setData(responseData);
       } catch (error) {
         console.error("Fehler beim Laden der Diagrammdaten:", error);
@@ -25,17 +25,20 @@ const LandCoverage = ({ latinName }) => {
     fetchData();
   }, [latinName]);
 
+  // Wenn kein Name übergeben wurde, nichts anzeigen
   if (!latinName) return null;
 
+  // Wenn keine Daten verfügbar sind, Hinweis anzeigen
   if (data.length === 0) {
     return <p>Es gibt keine Daten für dieses Diagramm.</p>;
   }
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 70 }}>
+    // Responsive Container sorgt dafür, dass sich das Diagramm an die Größe des Eltern-Containers anpasst
+    <ResponsiveContainer width="100%" height={500}>
+      <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 70 }}>
         <XAxis
-          dataKey="key" // <-- hier statt "landcover"
+          dataKey="key"
           stroke="black"
           angle={-45}
           textAnchor="end"
@@ -53,7 +56,7 @@ const LandCoverage = ({ latinName }) => {
             value: "Sichtungen",
             angle: -90,
             position: "insideLeft",
-            offset: 10,
+            offset: 0,
             fill: "black",
             dy: 30,
           }}
@@ -61,7 +64,6 @@ const LandCoverage = ({ latinName }) => {
         <Tooltip />
         <Bar dataKey="count" label={{ position: "top" }}>
           {data.map((entry, index) => {
-            console.log(entry.color); // Überprüfe den Farbwert
             return <Cell key={`cell-${index}`} fill={entry.color} />;
           })}
         </Bar>

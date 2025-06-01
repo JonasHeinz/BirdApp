@@ -1,10 +1,14 @@
 import { FixedSizeList } from "react-window";
-import { useMediaQuery } from "@mui/material";
 import React from "react";
 
-// Custom ListboxComponent for virtualization
+// Konstante für vertikalen Innenabstand der Liste
 const LISTBOX_PADDING = 8;
 
+/**
+ * Hilfsfunktion zum Rendern eines einzelnen Listenelements
+ * - Erhöht die top-Position jedes Eintrags um LISTBOX_PADDING
+ * - Erwartet ein React-Element aus den übergebenen Daten
+ */
 function renderRow(props) {
   const { data, index, style } = props;
   const dataSet = data[index];
@@ -16,12 +20,20 @@ function renderRow(props) {
   });
 }
 
+/**
+ * Virtualisierte Listbox-Komponente für MUI Autocomplete
+ * - Spart Rendering-Kosten bei langen Listen
+ * - Nutzt react-window für performantes Scrolling
+ */
 const ListboxComponent = React.forwardRef(function ListboxComponent(props, ref) {
   const { children, ...other } = props;
+
+  // children in ein Array von React-Elementen umwandeln
   const itemData = React.Children.toArray(children);
   const itemCount = itemData.length;
   const itemSize = 48;
 
+  // Maximale Höhe auf 8 Einträge begrenzen + Padding
   const height = Math.min(8, itemCount) * itemSize + 2 * LISTBOX_PADDING;
 
   return (
