@@ -9,7 +9,7 @@ from shapely.geometry import box
 import geopandas as gpd
 import os
 from dotenv import load_dotenv
-from server.scripts.pictures import get_image_for_species, get_wikipedia_summary
+from scripts.pictures import get_image_for_species, get_wikipedia_summary
 
 app = FastAPI()
 
