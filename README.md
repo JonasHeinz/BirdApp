@@ -3,7 +3,7 @@ Dieses Repository wurde im Rahmen einer Semesterarbeit erstellt.
 Unsere Web-App ermöglicht es Vogelinteressierten, sich über das Vorkommen und Verhalten verschiedener Vogelarten in der Schweiz zu informieren. Herzstück der Anwendung ist eine interaktive Karte, auf der Sichtungen in einem Raster aggregiert und durch Farbintensität visualisiert werden – je dunkler das Feld, desto häufiger die Beobachtungen. Nutzer:innen können gezielt nach Vogelarten oder ganzen Familien filtern und den Betrachtungszeitraum mithilfe eines Sliders eingrenzen. Zusätzlich bietet ein Liniendiagramm einen Überblick über zeitliche Häufungen der Sichtungen.  
 Man erhält auch weiterführende Informationen zu einer Vogelart. Ergänzt wird diese durch statistische Auswertungen zur Höhenverteilung der Sichtungen sowie zur Bodenbedeckung.
 
-Auf der [GitHub Pages](https://jonasheinz.github.io/BirdApp/) sieht man weiterführende Informationen
+Auf der [GitHub Pages](https://jonasheinz.github.io/VogelRadar/) sieht man weiterführende Informationen
 
 Wie die Web-App entwickelt wurde und wie sie lokal gestartet werden kann, lässt sich in dieser Anleitung nachvollziehen:
 
